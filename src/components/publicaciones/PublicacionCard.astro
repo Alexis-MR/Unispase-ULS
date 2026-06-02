@@ -1,0 +1,156 @@
+---
+import ComentariosLike from "../comentarios/ComentariosLike.astro";
+
+interface Props {
+   id: number;
+  tema?: string;
+
+  titulo?: string;
+  contenido?: string;
+  imagen?: string;
+
+  autor: string;
+  user_id: number;
+
+  created_at: string;
+
+  total_comentarios?: number;
+  total_likes?: number;
+  user_liked?: boolean;
+}
+
+const {
+  id,
+  tema,
+  autor,
+  user_id,
+  titulo,
+  contenido,
+  imagen,
+  created_at,
+  total_comentarios = 0,
+  total_likes = 0,
+  user_liked = false,
+} = Astro.props;
+---
+
+<article
+
+ class="publicacion-card"
+  data-publicacion-id={id}
+>
+
+  <!-- AUTOR + ID -->
+  <div class="autor-box">
+    <a href={`/usuario/${user_id}/usuario`} class="autor-link">
+      {autor}
+    </a>
+      {created_at && (
+    <h4 class="fecha">{created_at}</h4>
+  )}
+  </div>
+
+  <!-- FECHA -->
+
+
+  <!-- TEMA -->
+  {tema && (
+    <h4 class="tema">Tema: {tema}</h4>
+  )}
+
+  <!-- TITULO -->
+  {titulo && (
+    <h3 class="titulo">{titulo}</h3>
+  )}
+
+  <!-- CONTENIDO (recortado visualmente) -->
+  <p class="contenido">{contenido ?? ""}</p>
+
+  <!-- IMAGEN -->
+  {imagen && (
+    <div class="imagen-publicacion">
+      <img src={imagen} alt={titulo || "Imagen"}/>
+    </div>
+  )}
+<br>
+
+  <!-- COMENTARIOS + LIKES -->
+
+<ComentariosLike
+
+  id={id}
+    tipo="publicacion"
+    total_comentarios={total_comentarios}
+    total_likes={total_likes}
+    user_liked={user_liked}/>
+
+</article>
+
+<style>
+
+.publicacion-card{
+  padding: 12px;
+
+  background: white;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+/* AUTOR */
+.autor-box{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.fecha{
+  right: 1px;
+  position: relative;
+  
+}
+
+.autor-link{
+  font-weight: 600;
+  text-decoration:none;
+  color:#2563eb;
+}
+
+.autor-link:hover{
+  text-decoration: underline;
+}
+
+.user-id{
+  font-size: 12px;
+  color:#888;
+}
+
+/* CONTENIDO LIMITE */
+.contenido{
+
+  -webkit-box-orient: vertical;
+  margin:1px;
+  color:#000000;
+  font-size: 22px;
+}
+
+/* TEMA + TITULO */
+.tema{ font-size: 13px; color:#555; }
+.titulo{ font-size: 16px; margin: 4px 0; }
+.imagen-publicacion{
+  padding:1px;
+  height:500px;
+  width:100%;
+}
+img{
+  margin:1px;
+width:100%;
+height:400px
+
+
+ 
+
+}
+
+</style>

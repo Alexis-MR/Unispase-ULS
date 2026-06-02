@@ -1,0 +1,111 @@
+<form id="publicarForm"  class="form-card hidden">
+
+  <input
+    type="text"
+    name="tema"
+    placeholder="Tema"
+    required
+  />
+
+  <input
+    type="text"
+    name="titulo"
+    placeholder="Titulo"
+    required
+  />
+
+  <textarea
+    name="contenido"
+    placeholder="Contenido"
+    required
+  ></textarea>
+
+  <input
+    type="file"
+    name="imagen"
+    accept="image/*"
+  />
+
+  <div class="radio-group">
+
+    <label>Visibilidad:</label>
+
+    <label>
+      <input
+        type="radio"
+        name="publica"
+        value="1"
+        checked
+      />
+
+      <span>🌍 Público</span>
+    </label>
+
+    <label>
+      <input
+        type="radio"
+        name="publica"
+        value="0"
+      />
+
+      <span>🔒 Privado</span>
+    </label>
+
+  </div>
+
+  <button
+    type="submit"
+    class="btn-publicar"
+  >
+    Publicar
+  </button>
+
+</form>
+
+<script type="module">
+
+  import {
+    crearPublicacion
+  } from "/src/lib/publicaciones.js";
+
+  const form =
+    document.getElementById(
+      "publicarForm"
+    );
+
+  form?.addEventListener(
+    "submit",
+    async (e) => {
+
+      e.preventDefault();
+
+      try {
+
+        const formData =
+          new FormData(form);
+
+        await crearPublicacion(
+          formData
+        );
+
+        form.reset();
+
+        alert(
+          "Publicación creada"
+        );
+
+        window.location.reload();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error.message ||
+          "Error al publicar"
+        );
+      }
+    }
+  );
+
+</script>

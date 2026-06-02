@@ -1,0 +1,1091 @@
+---
+interface Props {
+  id: number;
+  tema?: string;
+  titulo?: string;
+  descripcion?: string;
+  contenido?: string;
+
+
+}
+
+const {
+  id,
+  tema,
+  titulo,
+  descripcion,
+  contenido
+} = Astro.props;
+---
+
+<>
+
+  <!-- ========================= -->
+  <!-- MENU -->
+  <!-- ========================= -->
+
+  <div class="menu-publicacion">
+
+    <button
+      class="abrir-menu"
+      data-id={id}
+      type="button"
+    >
+      ...
+    </button>
+
+    <div
+      class="menu-opciones"
+      id={`menu-${id}`}
+    >
+
+      <button
+        type="button"
+        class="btn-editar"
+        data-id={id}
+      >
+        ✏️ Editar
+      </button>
+
+      <button
+        type="button"
+        class="btn-eliminar"
+        data-id={id}
+      >
+        🗑️ Eliminar
+      </button>
+
+          <button
+          type="button"
+          class="btn-copiar-enlace"
+          data-id={id}
+        >
+              🔗 Copiar enlace
+        </button>
+
+    </div>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- MODAL -->
+  <!-- ========================= -->
+
+  <dialog id={`modal-${id}`}>
+
+    <form
+      class="editarForm"
+      data-id={id}
+    >
+
+      <input
+        type="text"
+        name="tema"
+        placeholder="Tema"
+        value={tema ?? ""}
+        required
+      />
+
+      <input
+        type="text"
+        name="titulo"
+        placeholder="Titulo"
+        value={titulo ?? ""}
+      />
+
+      <textarea
+        name="descripcion"
+        placeholder="Describe el contenido de tu podcast"
+      >{descripcion ?? ""}</textarea>
+
+      {contenido && (
+        <div>
+
+          <video
+            src={contenido}
+            style="max-width: 200px;"
+          />
+  
+          <p>
+            Subir nuevo video reemplazará el actual
+          </p>
+
+        </div>
+      )}
+
+      <input
+        type="file"
+        name="contenido"
+        accept="mimes/*"
+      />
+
+
+      <button
+        type="submit"
+        class="btn-publicar"
+      >
+        Guardar cambios
+      </button>
+
+      <button
+        type="button"
+        class="cerrar-modal"
+      >
+        Cerrar
+      </button>
+
+    </form>
+
+  </dialog>
+
+</>
+
+<style>
+
+  .menu-publicacion {
+
+    position: relative;
+    display: inline-block;
+    z-index: 100;
+  }
+
+  .abrir-menu {
+
+    border: none;
+    background: black;
+    z-index: 100;
+    cursor: pointer;
+
+    font-size: 20px;
+  }
+
+  .menu-opciones {
+
+    top: 35px;
+    right: 0;
+
+    display: none;
+    flex-direction: column;
+
+    min-width: 100px;
+    color:black;
+
+
+    border-radius: 10px;
+
+    padding: 5px;
+
+    z-index: 9999;
+
+    box-shadow:
+      0 4px 12px rgba(0,0,0,.15);
+  }
+
+  .menu-opciones button {
+
+    border: none;
+    font-style: italic;
+    color: #000;
+
+    padding: 4px;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    border-radius: 8px;
+  }
+
+  .menu-opciones button:hover {
+
+    background: #aca6a6;
+  }
+
+</style>
+
+<script type="module">
+
+  import {
+    actualizarPodcast,
+    eliminarPodcast
+  } from "/src/lib/podcast.js";
+
+  // =========================
+  // MENU
+  // =========================
+
+  document
+    .querySelectorAll(".abrir-menu")
+    .forEach((btn) => {
+
+      if (
+        btn.dataset.listenerAdded
+      ) {
+        return;
+      }
+
+      btn.dataset.listenerAdded =
+        "true";
+
+      btn.addEventListener(
+        "click",
+        (e) => {
+
+          e.stopPropagation();
+
+          const id =
+            btn.dataset.id;
+
+          const menu =
+            document.getElementById(
+              `menu-${id}`
+            );
+
+          if (!menu) return;
+
+          const abierto =
+            getComputedStyle(menu)
+              .display !== "none";
+
+          // cerrar todos
+          document
+            .querySelectorAll(
+              ".menu-opciones"
+            )
+            .forEach((m) => {
+
+              m.style.display =
+                "none";
+            });
+
+          menu.style.display =
+            abierto
+              ? "none"
+              : "flex";
+        }
+      );
+    });
+
+  // =========================
+  // CERRAR MENUS
+  // =========================
+
+  document.addEventListener(
+    "click",
+    () => {
+
+      document
+        .querySelectorAll(
+          ".menu-opciones"
+        )
+        .forEach((menu) => {
+
+          menu.style.display =
+            "none";
+        });
+    }
+  );
+
+  // =========================
+  // EDITAR
+  // =========================
+
+  document
+    .querySelectorAll(".btn-editar")
+    .forEach((btn) => {
+
+      if (
+        btn.dataset.listenerAdded
+      ) {
+        return;
+      }
+
+      btn.dataset.listenerAdded =
+        "true";
+
+      btn.addEventListener(
+        "click",
+        () => {
+
+          const id =
+            btn.dataset.id;
+
+          const modal =
+            document.getElementById(
+              `modal-${id}`
+            );
+
+          const menu =
+            document.getElementById(
+              `menu-${id}`
+            );
+
+          if (menu) {
+
+            menu.style.display =
+              "none";
+          }
+
+          modal?.showModal();
+        }
+      );
+    });
+
+  // =========================
+  // ELIMINAR
+  // =========================
+
+  document
+    .querySelectorAll(".btn-eliminar")
+    .forEach((btn) => {
+
+      if (
+        btn.dataset.listenerAdded
+      ) {
+        return;
+      }
+
+      btn.dataset.listenerAdded =
+        "true";
+
+      btn.addEventListener(
+        "click",
+        async () => {
+
+          const id =
+            btn.dataset.id;
+
+          const confirmar =
+            confirm(
+              "¿Deseas eliminar esta publicación?"
+            );
+
+          if (!confirmar) {
+            return;
+          }
+
+          try {
+
+            const result =
+              await eliminarPodcast(
+                id
+              );
+
+            alert(
+              result.message ||
+              "Publicación eliminada"
+            );
+
+            const wrapper =
+              document.querySelector(
+                `[data-wrapper-id="${id}"]`
+              );
+
+            if (wrapper) {
+              wrapper.remove();
+            }
+
+          } catch (error) {
+
+            console.error(error);
+
+            alert(
+              error.message ||
+              "Error al eliminar"
+            );
+          }
+        }
+      );
+    });
+
+  // =========================
+  // CERRAR MODAL
+  // =========================
+
+  document
+    .querySelectorAll(".cerrar-modal")
+    .forEach((btn) => {
+
+      if (
+        btn.dataset.listenerAdded
+      ) {
+        return;
+      }
+
+      btn.dataset.listenerAdded =
+        "true";
+
+      btn.addEventListener(
+        "click",
+        () => {
+
+          btn
+            .closest("dialog")
+            ?.close();
+        }
+      );
+    });
+
+  // =========================
+  // ACTUALIZAR
+  // =========================
+
+  document
+    .querySelectorAll(".editarForm")
+    .forEach((form) => {
+
+      if (
+        form.dataset.listenerAdded
+      ) {
+        return;
+      }
+
+      form.dataset.listenerAdded =
+        "true";
+
+      form.addEventListener(
+        "submit",
+        async (e) => {
+
+          e.preventDefault();
+
+          const id =
+            form.dataset.id;
+
+          try {
+
+            const formData =
+              new FormData(form);
+
+            const result =
+              await actualizarPodcast(
+                id,
+                formData
+              );
+
+            alert(
+              result.message ||
+              "Publicación actualizada"
+            );
+
+            const publicacion =
+              result.data ||
+              result;
+
+            form
+              .closest("dialog")
+              ?.close();
+
+            const card =
+              document.querySelector(
+                `[data-publicacion-id="${publicacion.id}"]`
+              );
+
+            if (!card) {
+              return;
+            }
+
+            const titulo =
+              card.querySelector(
+                ".titulo"
+              );
+
+            const contenido =
+              card.querySelector(
+                ".contenido"
+              );
+
+            const tema =
+              card.querySelector(
+                ".tema"
+              );
+
+            const imagen =
+              card.querySelector(
+                ".imagen-publicacion"
+              );
+
+            if (titulo) {
+
+              titulo.textContent =
+                publicacion.titulo || "";
+            }
+
+            if (contenido) {
+
+              contenido.textContent =
+                publicacion.contenido || "";
+            }
+
+            if (tema) {
+
+              tema.textContent =
+                `Tema: ${publicacion.tema || ""}`;
+            }
+
+            if (
+              imagen &&
+              publicacion.imagen
+            ) {
+
+              imagen.src =
+                publicacion.imagen;
+            }
+
+          } catch (error) {
+
+            console.error(error);
+
+            alert(
+              error.message ||
+              "Error al actualizar"
+            );
+          }
+        }
+      );
+    });
+// =========================
+// COPIAR ENLACE
+// =========================
+
+document
+  .querySelectorAll(
+    ".btn-copiar-enlace"
+  )
+  .forEach((btn) => {
+
+    if (
+      btn.dataset.listenerAdded
+    ) {
+      return;
+    }
+
+    btn.dataset.listenerAdded =
+      "true";
+
+    btn.addEventListener(
+      "click",
+      async () => {
+
+        const id =
+          btn.dataset.id;
+
+        try {
+
+          const url =
+            `${window.location.origin}/podcast/${id}`;
+
+          await navigator.clipboard.writeText(
+            url
+          );
+
+          alert(
+            "Enlace copiado"
+          );
+
+          const menu =
+            document.getElementById(
+              `menu-${id}`
+            );
+
+          if (menu) {
+
+            menu.style.display =
+              "none";
+          }
+
+        } catch (error) {
+
+          console.error(error);
+
+          alert(
+            "No se pudo copiar el enlace"
+          );
+        }
+      }
+    );
+  });
+</script>
+<style>
+  .menu-publicacion {
+
+  position: absolute;
+
+  top: 1rem;
+  right: 1rem;
+
+  z-index: 50;
+}
+
+/* =========================
+   BOTON MENU
+========================= */
+
+.abrir-menu {
+
+  width: 42px;
+  height: 42px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,.82);
+
+  backdrop-filter:
+    blur(12px);
+
+  color: #334155;
+
+  font-size: 1.1rem;
+
+  font-weight: 900;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    .25s ease;
+
+  box-shadow:
+    0 8px 20px rgba(15,23,42,.08);
+
+  border:
+    1px solid rgba(255,255,255,.4);
+}
+
+.abrir-menu:hover {
+
+  transform:
+    translateY(-2px)
+    scale(1.04);
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #7c3aed
+    );
+
+  color: white;
+
+  box-shadow:
+    0 14px 30px rgba(37,99,235,.2);
+}
+
+/* =========================
+   MENU
+========================= */
+
+.menu-opciones {
+
+  position: absolute;
+
+  top: 52px;
+  right: 0;
+
+  display: none;
+
+  flex-direction: column;
+
+  gap: .4rem;
+
+  min-width: 220px;
+
+  padding: .8rem;
+
+  border-radius: 22px;
+
+  background:
+    rgba(255,255,255,.88);
+
+  backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,.5);
+
+  box-shadow:
+    0 18px 45px rgba(15,23,42,.14);
+
+  animation:
+    menuFade .18s ease;
+}
+
+@keyframes menuFade {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateY(-8px)
+      scale(.98);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================
+   BOTONES MENU
+========================= */
+
+.menu-opciones button {
+
+  border: none;
+
+  border-radius: 16px;
+
+  padding:
+    .95rem
+    1rem;
+
+  background:
+    transparent;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: .8rem;
+
+  width: 100%;
+
+  font-size: .95rem;
+
+  font-weight: 700;
+
+  color: #334155;
+
+  cursor: pointer;
+
+  transition:
+    .22s ease;
+}
+
+.menu-opciones button:hover {
+
+  transform:
+    translateX(3px);
+
+  background:
+    #f8fafc;
+}
+
+/* =========================
+   EDITAR
+========================= */
+
+.btn-editar:hover {
+
+  background:
+    rgba(37,99,235,.08);
+
+  color:
+    #2563eb;
+}
+
+/* =========================
+   ELIMINAR
+========================= */
+
+.btn-eliminar:hover {
+
+  background:
+    rgba(239,68,68,.08);
+
+  color:
+    #dc2626;
+}
+
+/* =========================
+   COPIAR
+========================= */
+
+.btn-copiar-enlace:hover {
+
+  background:
+    rgba(124,58,237,.08);
+
+  color:
+    #7c3aed;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+dialog {
+
+  border: none;
+
+  padding: 0;
+
+  border-radius: 32px;
+
+  overflow: hidden;
+
+  width:
+    min(95vw, 720px);
+
+  background:
+    rgba(255,255,255,.92);
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 25px 60px rgba(15,23,42,.2);
+}
+
+dialog::backdrop {
+
+  background:
+    rgba(15,23,42,.55);
+
+  backdrop-filter:
+    blur(6px);
+}
+
+/* =========================
+   FORM
+========================= */
+
+.editarForm {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1rem;
+
+  padding: 2rem;
+}
+
+.editarForm input[type="text"],
+.editarForm textarea,
+.editarForm input[type="file"] {
+
+  width: 100%;
+
+  border:
+    1px solid #e2e8f0;
+
+  background:
+    #f8fafc;
+
+  border-radius: 18px;
+
+  padding:
+    1rem
+    1.1rem;
+
+  font-size: .96rem;
+
+  font-family: inherit;
+
+  transition:
+    .25s ease;
+}
+
+.editarForm textarea {
+
+  min-height: 160px;
+
+  resize: vertical;
+
+  line-height: 1.7;
+}
+
+.editarForm input:focus,
+.editarForm textarea:focus {
+
+  outline: none;
+
+  border-color:
+    #2563eb;
+
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,.12);
+
+  background:
+    white;
+}
+
+/* =========================
+   IMAGEN
+========================= */
+
+.editarForm img {
+
+  width: 100%;
+
+  max-width: 260px;
+
+  border-radius: 22px;
+
+  object-fit: cover;
+
+  box-shadow:
+    0 10px 30px rgba(15,23,42,.08);
+
+  margin-bottom: .8rem;
+}
+
+.editarForm p {
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: .88rem;
+}
+
+/* =========================
+   RADIO GROUP
+========================= */
+
+.radio-group {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1rem;
+
+  padding:
+    1rem
+    1.2rem;
+
+  border-radius: 20px;
+
+  background:
+    #f8fafc;
+
+  border:
+    1px solid #e2e8f0;
+}
+
+.radio-group > label {
+
+  font-weight: 800;
+
+  color: #0f172a;
+}
+
+.radio-group label label {
+
+  font-weight: 600;
+}
+
+.radio-group input[type="radio"] {
+
+  accent-color:
+    #2563eb;
+}
+
+.radio-group span {
+
+  margin-left: .45rem;
+
+  color: #475569;
+}
+
+/* =========================
+   BOTONES FORM
+========================= */
+
+.btn-publicar,
+.cerrar-modal {
+
+  border: none;
+
+  border-radius: 18px;
+
+  padding:
+    1rem
+    1.2rem;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    .25s ease;
+}
+
+.btn-publicar {
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #7c3aed
+    );
+
+  color: white;
+
+  box-shadow:
+    0 15px 30px rgba(37,99,235,.18);
+}
+
+.btn-publicar:hover {
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 20px 40px rgba(37,99,235,.25);
+}
+
+.cerrar-modal {
+
+  background:
+    #f1f5f9;
+
+  color:
+    #334155;
+}
+
+.cerrar-modal:hover {
+
+  background:
+    #e2e8f0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width:768px) {
+
+  .menu-opciones {
+
+    min-width: 190px;
+  }
+
+  .editarForm {
+
+    padding: 1.3rem;
+  }
+
+  dialog {
+
+    width:
+      calc(100vw - 1rem);
+
+    border-radius: 24px;
+  }
+}
+</style>

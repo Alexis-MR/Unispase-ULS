@@ -1,0 +1,402 @@
+---
+import ComentariosLike
+from "../comentarios/ComentariosLike.astro";
+
+interface Props {
+
+  id: number;
+
+  tema?: string;
+
+  titulo?: string;
+
+  descripcion?: string;
+
+  contenido?: string;
+
+  autor: string;
+
+  user_id: number;
+
+  created_at: string;
+
+  total_comentarios?: number;
+
+  total_likes?: number;
+
+  user_liked?: boolean;
+}
+
+const {
+
+  id,
+
+  tema,
+
+  autor,
+
+  user_id,
+
+  titulo,
+
+  descripcion,
+
+  contenido,
+
+  created_at,
+
+  total_comentarios = 0,
+
+  total_likes = 0,
+
+  user_liked = false,
+
+} = Astro.props;
+---
+
+<article
+  class="podcast-card"
+  data-podcast-id={id}
+>
+
+  <!-- HEADER -->
+  <div class="podcast-header">
+
+    <div class="autor-info">
+
+      <div class="avatar">
+        {autor?.charAt(0)}
+      </div>
+
+      <div>
+
+        <a
+          href={`/usuario/${user_id}/usuario`}
+          class="autor-link"
+        >
+          {autor}
+        </a>
+
+        {created_at && (
+
+          <span class="fecha">
+            {created_at}
+          </span>
+
+        )}
+
+      </div>
+
+    </div>
+
+    {tema && (
+
+      <span class="tema-badge">
+        {tema}
+      </span>
+
+    )}
+
+  </div>
+
+  <!-- TITULO -->
+  {titulo && (
+
+    <h2 class="titulo">
+      {titulo}
+    </h2>
+
+  )}
+
+  <!-- DESCRIPCION -->
+  {descripcion && (
+
+    <p class="descripcion">
+      {descripcion}
+    </p>
+
+  )}
+
+  <!-- VIDEO -->
+{contenido && (
+
+  <div class="media-podcast">
+
+    <video
+      controls
+      class="podcast-video"
+    >
+
+      <source
+        src={`http://127.0.0.1:8000/storage/${contenido}`}
+        type="video/mp4"
+      />
+
+    </video>
+
+  </div>
+
+)}
+
+  <!-- FOOTER -->
+  <div class="podcast-footer">
+
+    <ComentariosLike
+      id={id}
+      tipo="podcast"
+      total_comentarios={total_comentarios}
+      total_likes={total_likes}
+      user_liked={user_liked}
+    />
+
+  </div>
+
+</article>
+
+<style>
+.media-podcast{
+  margin-top:1rem;
+}
+
+.podcast-video{
+  width:100%;
+  border-radius:16px;
+  background:black;
+}
+.podcast-card{
+
+  width:100%;
+
+  padding:1.4rem;
+
+  border-radius:28px;
+
+  background:
+    rgba(255,255,255,.82);
+
+  backdrop-filter:blur(16px);
+
+  border:
+    1px solid rgba(255,255,255,.5);
+
+  box-shadow:
+    0 15px 35px rgba(15,23,42,.06);
+
+  transition:.28s ease;
+
+  overflow:hidden;
+}
+
+.podcast-card:hover{
+
+  transform:
+    translateY(-4px);
+
+  box-shadow:
+    0 22px 45px rgba(15,23,42,.1);
+}
+
+/* HEADER */
+
+.podcast-header{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:flex-start;
+
+  gap:1rem;
+
+  margin-bottom:1rem;
+
+  flex-wrap:wrap;
+}
+
+/* AUTOR */
+
+.autor-info{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:.9rem;
+}
+
+.avatar{
+
+  width:52px;
+
+  height:52px;
+
+  border-radius:50%;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:1.2rem;
+
+  font-weight:800;
+
+  color:white;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #7c3aed
+    );
+
+  box-shadow:
+    0 10px 20px rgba(37,99,235,.2);
+}
+
+.autor-link{
+
+  display:block;
+
+  text-decoration:none;
+
+  color:#0f172a;
+
+  font-weight:800;
+
+  font-size:1rem;
+}
+
+.autor-link:hover{
+
+  color:#2563eb;
+}
+
+.fecha{
+
+  display:block;
+
+  margin-top:.2rem;
+
+  font-size:.85rem;
+
+  color:#64748b;
+}
+
+/* BADGE */
+
+.tema-badge{
+
+  padding:
+    .5rem
+    .9rem;
+
+  border-radius:999px;
+
+  font-size:.8rem;
+
+  font-weight:700;
+
+  color:#2563eb;
+
+  background:
+    rgba(37,99,235,.1);
+
+  border:
+    1px solid rgba(37,99,235,.15);
+}
+
+/* TITULO */
+
+.titulo{
+
+  margin:0;
+
+  margin-bottom:.9rem;
+
+  font-size:1.7rem;
+
+  line-height:1.2;
+
+  color:#0f172a;
+
+  font-weight:900;
+}
+
+/* DESCRIPCION */
+
+.descripcion{
+
+  margin:0;
+
+  margin-bottom:1.3rem;
+
+  color:#475569;
+
+  line-height:1.7;
+
+  font-size:1rem;
+}
+
+/* VIDEO */
+
+.video-wrapper{
+
+  overflow:hidden;
+
+  border-radius:22px;
+
+  background:#000;
+
+  margin-bottom:1rem;
+}
+
+.podcast-video{
+
+  width:100%;
+
+  max-height:500px;
+
+  display:block;
+
+  object-fit:cover;
+}
+
+/* FOOTER */
+
+.podcast-footer{
+
+  margin-top:1rem;
+
+  padding-top:1rem;
+
+  border-top:
+    1px solid #e2e8f0;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:768px){
+
+  .podcast-card{
+
+    padding:1rem;
+
+    border-radius:22px;
+  }
+
+  .titulo{
+
+    font-size:1.3rem;
+  }
+
+  .avatar{
+
+    width:44px;
+
+    height:44px;
+  }
+}
+
+</style>

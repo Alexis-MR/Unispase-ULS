@@ -1,7 +1,23 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+import PublicacionCard from '../../components/publicaciones/PublicacionCard.astro';
+import {getPublicaciones} from '@/lib/publicaciones';
+
+const publicaciones = [];
+let initialData = {
+  data: [],
+  total: 0,
+  current_page: 1,
+  last_page: 1,
+};
+
+try
+{
+  const publicaciones = await getPublicaciones();
+  console.log('Publicaciones cargadas:', publicaciones);
+} catch (error) {
+  console.error('Error al cargar publicaciones:', error);
+}
 ---
 
 <Layout title="Foro — UniSpace ULS">
@@ -44,7 +60,25 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       </div>
     </div>
 
-    <div id="posts-lista"></div>
+    <div id="posts-lista">
+      {Array.isArray(initialData.data) &&
+    initialData.data.length > 0 ? (
+
+      initialData.data.map((pub) => (
+
+        <div
+          class="item-wrapper"
+        >
+
+          <PublicacionCard {...pub} />
+
+        </div>
+
+      ))
+
+    ) : '<p class="loading">No hay publicaciones aún. ¡Sé el primero!</p>'
+      }
+    </div>
   </div>
 </Layout>
 

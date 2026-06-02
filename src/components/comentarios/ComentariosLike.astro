@@ -1,0 +1,890 @@
+---
+/*
+components/ComentariosLikes.astro
+*/
+
+interface Props {
+  id: number;
+  tipo: string;
+  total_comentarios?: number;
+  total_likes?: number;
+  user_liked?: boolean;
+}
+
+const {
+  id,
+  tipo,
+  total_comentarios = 0,
+  total_likes = 0,
+  user_liked = false,
+} = Astro.props;
+---
+
+<div
+  class="cl-wrapper"
+  data-id={id}
+  data-tipo={tipo}
+>
+
+  <!-- ACTIONS -->
+  <div class="stats">
+
+    <button
+      type="button"
+      class="btn-action btn-comentarios"
+    >
+      <span>💬</span>
+
+      <span class="comentarios-count">
+        {total_comentarios}
+      </span>
+
+      <small>Comentarios</small>
+    </button>
+
+    <button
+      type="button"
+      class="btn-action btn-like"
+      data-liked={user_liked.toString()}
+    >
+      <span class="like-icon">
+        {user_liked ? "❤️" : "🤍"}
+      </span>
+
+      <span class="like-count">
+        {total_likes}
+      </span>
+
+      <small>Likes</small>
+    </button>
+
+  </div>
+
+  <!-- COMENTARIOS -->
+  <div
+    class="comentarios-section"
+    style="display:none;"
+  >
+
+    <div class="comentarios-lista"></div>
+
+    <form class="form-comentario">
+
+      <textarea
+        class="input-comentario"
+        placeholder="Escribe un comentario..."
+        maxlength="5000"
+        rows="3"
+        required
+      ></textarea>
+
+      <div class="comentario-footer">
+
+        <span class="comentario-info">
+          Máximo 5000 caracteres
+        </span>
+
+        <button
+          type="submit"
+          class="btn-enviar"
+        >
+          Comentar
+        </button>
+
+      </div>
+
+    </form>
+
+    <button
+      class="btn-cargar-mas"
+      style="display:none;"
+    >
+      Cargar más comentarios
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+  import {
+    getComentarios,
+    crearComentario,
+  } from "../../lib/comentarios";
+
+  import {
+    toggleLike,
+  } from "../../lib/like";
+
+  const comentariosState = new Map();
+
+  function renderComentario(comentario) {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "comentario-item";
+
+    div.innerHTML = `
+      <div class="comentario-header">
+        <div class="comentario-avatar">
+         <a href="/usuario/${comentario.user_id}/usuario"}> 
+          ${comentario.user.nombre}</a>
+        </div>
+      </div>
+
+      <p>
+        ${
+          comentario.comentario
+          || comentario.texto_comentario
+          || ""
+        }
+      </p>
+    `;
+
+    return div;
+  }
+
+  document
+    .querySelectorAll(".cl-wrapper")
+    .forEach((wrapper) => {
+
+      if (
+        wrapper.dataset.initialized
+        === "true"
+      ) return;
+
+      wrapper.dataset.initialized =
+        "true";
+
+      const id =
+        Number(wrapper.dataset.id);
+
+      const tipo =
+        wrapper.dataset.tipo;
+
+      const btnComentarios =
+        wrapper.querySelector(
+          ".btn-comentarios"
+        );
+
+      const btnLike =
+        wrapper.querySelector(
+          ".btn-like"
+        );
+
+      const section =
+        wrapper.querySelector(
+          ".comentarios-section"
+        );
+
+      const lista =
+        wrapper.querySelector(
+          ".comentarios-lista"
+        );
+
+      const form =
+        wrapper.querySelector(
+          ".form-comentario"
+        );
+
+      const textarea =
+        wrapper.querySelector(
+          ".input-comentario"
+        );
+
+      const btnEnviar =
+        wrapper.querySelector(
+          ".btn-enviar"
+        );
+
+      const btnCargarMas =
+        wrapper.querySelector(
+          ".btn-cargar-mas"
+        );
+
+      const countComentarios =
+        wrapper.querySelector(
+          ".comentarios-count"
+        );
+
+      const countLikes =
+        wrapper.querySelector(
+          ".like-count"
+        );
+
+      const iconLike =
+        wrapper.querySelector(
+          ".like-icon"
+        );
+
+      /* =========================
+         TOGGLE COMENTARIOS
+      ========================= */
+
+      btnComentarios.addEventListener(
+        "click",
+        async () => {
+
+          const visible =
+            section.style.display !==
+            "none";
+
+          section.style.display =
+            visible
+              ? "none"
+              : "flex";
+
+          if (
+            !visible &&
+            !comentariosState.has(id)
+          ) {
+
+            try {
+
+              lista.innerHTML = `
+                <div class="loading">
+                  Cargando comentarios...
+                </div>
+              `;
+
+              const data =
+                await getComentarios(id,tipo);
+
+              lista.innerHTML = "";
+
+              if (!data) return;
+
+              comentariosState.set(id, {
+                offset:
+                  data.comentarios.length,
+                total: data.total,
+                hasMore: data.hasMore,
+              });
+
+              if (
+                data.comentarios.length === 0
+              ) {
+
+                lista.innerHTML = `
+                  <div class="empty-comments">
+                    Aún no hay comentarios
+                  </div>
+                `;
+
+              } else {
+
+                data.comentarios.forEach(
+                  (c) => {
+                    lista.appendChild(
+                      renderComentario(c)
+                    );
+                  }
+                );
+              }
+
+              btnCargarMas.style.display =
+                data.hasMore
+                  ? "block"
+                  : "none";
+
+            } catch (err) {
+
+              console.error(err);
+
+              lista.innerHTML = `
+                <p class="cl-error">
+                  Error al cargar comentarios
+                </p>
+              `;
+            }
+          }
+        }
+      );
+
+      /* =========================
+         CARGAR MÁS
+      ========================= */
+
+      btnCargarMas.addEventListener(
+        "click",
+        async () => {
+
+          const state =
+            comentariosState.get(id);
+
+          if (!state) return;
+
+          btnCargarMas.disabled =
+            true;
+
+          btnCargarMas.textContent =
+            "Cargando...";
+
+          try {
+
+            const data =
+              await getComentarios(
+                id,
+                10,
+                state.offset
+              );
+
+            data.comentarios.forEach(
+              (c) => {
+                lista.appendChild(
+                  renderComentario(c)
+                );
+              }
+            );
+
+            comentariosState.set(id, {
+              offset:
+                state.offset +
+                data.comentarios.length,
+
+              total: data.total,
+
+              hasMore: data.hasMore,
+            });
+
+            btnCargarMas.style.display =
+              data.hasMore
+                ? "block"
+                : "none";
+
+          } catch (err) {
+
+            console.error(err);
+
+          } finally {
+
+            btnCargarMas.disabled =
+              false;
+
+            btnCargarMas.textContent =
+              "Cargar más comentarios";
+          }
+        }
+      );
+
+      /* =========================
+         ENVIAR COMENTARIO
+      ========================= */
+
+      form.addEventListener(
+        "submit",
+        async (e) => {
+
+          e.preventDefault();
+
+          const comentario =
+            textarea.value.trim();
+
+          if (!comentario) return;
+
+          btnEnviar.disabled = true;
+
+          btnEnviar.textContent =
+            "Enviando...";
+
+          try {
+
+            const nuevo =
+              await crearComentario({
+                comentario,
+                commentable_id: id,
+                commentable_type: tipo,
+              });
+
+            const empty =
+              lista.querySelector(
+                ".empty-comments"
+              );
+
+            if (empty) {
+              empty.remove();
+            }
+
+            lista.prepend(
+              renderComentario(nuevo)
+            );
+
+            countComentarios.textContent =
+              String(
+                Number(
+                  countComentarios.textContent
+                ) + 1
+              );
+
+            textarea.value = "";
+
+          } catch (err) {
+
+            console.error(err);
+
+            alert(
+              err.message ||
+              "Error al comentar"
+            );
+
+          } finally {
+
+            btnEnviar.disabled = false;
+
+            btnEnviar.textContent =
+              "Comentar";
+          }
+        }
+      );
+
+      /* =========================
+         LIKE
+      ========================= */
+
+      btnLike.addEventListener(
+        "click",
+        async () => {
+
+          if (
+            btnLike.dataset.loading
+            === "true"
+          ) return;
+
+          btnLike.dataset.loading =
+            "true";
+
+          try {
+
+            const result =
+              await toggleLike(
+                id,
+                tipo
+              );
+
+            btnLike.dataset.liked =
+              result.liked.toString();
+
+            iconLike.textContent =
+              result.liked
+                ? "❤️"
+                : "🤍";
+
+            countLikes.textContent =
+              String(
+                result.total_likes
+              );
+
+            btnLike.classList.toggle(
+              "liked",
+              result.liked
+            );
+
+          } catch (err) {
+
+            console.error(err);
+
+          } finally {
+
+            btnLike.dataset.loading =
+              "false";
+          }
+        }
+      );
+    });
+</script>
+
+<style>
+
+  .cl-wrapper{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:1rem;
+
+    width:100%;
+  }
+
+  /* ACTIONS */
+
+  .stats{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:1rem;
+
+    flex-wrap:wrap;
+  }
+
+  .btn-action{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.55rem;
+
+    padding:.7rem 1rem;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:
+      rgba(255,255,255,.75);
+
+    backdrop-filter:blur(12px);
+
+    box-shadow:
+      0 6px 20px rgba(15,23,42,.06);
+
+    cursor:pointer;
+
+    transition:.25s ease;
+
+    color:#334155;
+
+    font-weight:700;
+  }
+
+  .btn-action:hover{
+
+    transform:
+      translateY(-2px);
+
+    box-shadow:
+      0 10px 25px rgba(15,23,42,.12);
+  }
+
+  .btn-action small{
+
+    color:#64748b;
+
+    font-size:.78rem;
+
+    font-weight:600;
+  }
+
+  .btn-like.liked{
+
+    background:
+      linear-gradient(
+        135deg,
+        rgba(239,68,68,.12),
+        rgba(244,63,94,.12)
+      );
+
+    color:#dc2626;
+  }
+
+  /* COMENTARIOS */
+
+  .comentarios-section{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:1rem;
+
+    padding:1rem;
+
+    border-radius:22px;
+
+    background:
+      rgba(255,255,255,.72);
+
+    backdrop-filter:blur(14px);
+
+    border:
+      1px solid rgba(255,255,255,.4);
+
+    box-shadow:
+      0 10px 25px rgba(15,23,42,.05);
+  }
+
+  .comentarios-lista{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:.9rem;
+  }
+
+  .comentario-item{
+
+    background:
+      linear-gradient(
+        180deg,
+        #ffffff,
+        #f8fafc
+      );
+
+    border:
+      1px solid #e2e8f0;
+
+    border-radius:18px;
+
+    padding:1rem;
+
+    transition:.2s ease;
+  }
+
+  .comentario-item:hover{
+
+    transform:
+      translateY(-2px);
+
+    box-shadow:
+      0 10px 20px rgba(15,23,42,.06);
+  }
+
+  .comentario-header{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.75rem;
+
+    margin-bottom:.7rem;
+  }
+
+  .comentario-avatar{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-weight:800;
+
+    color:white;
+
+    background:
+      linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+      );
+  }
+
+  .comentario-header strong{
+
+    color:#0f172a;
+
+    font-size:.92rem;
+  }
+
+  .comentario-item p{
+
+    margin:0;
+
+    color:#475569;
+
+    line-height:1.7;
+  }
+
+  /* FORM */
+
+  .form-comentario{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:.8rem;
+  }
+
+  .input-comentario{
+
+    width:100%;
+
+    border:none;
+
+    outline:none;
+
+    resize:none;
+
+    border-radius:18px;
+
+    padding:1rem;
+
+    font-size:.95rem;
+
+    font-family:inherit;
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    transition:.25s ease;
+  }
+
+  .input-comentario:focus{
+
+    border-color:#2563eb;
+
+    box-shadow:
+      0 0 0 4px rgba(37,99,235,.12);
+  }
+
+  .comentario-footer{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:1rem;
+
+    flex-wrap:wrap;
+  }
+
+  .comentario-info{
+
+    font-size:.82rem;
+
+    color:#94a3b8;
+  }
+
+  .btn-enviar{
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:
+      .85rem
+      1.3rem;
+
+    font-weight:700;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:.25s ease;
+
+    background:
+      linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+      );
+
+    box-shadow:
+      0 10px 20px rgba(37,99,235,.18);
+  }
+
+  .btn-enviar:hover{
+
+    transform:
+      translateY(-2px);
+
+    box-shadow:
+      0 15px 28px rgba(37,99,235,.25);
+  }
+
+  .btn-enviar:disabled{
+
+    opacity:.7;
+
+    cursor:not-allowed;
+  }
+
+  /* LOAD MORE */
+
+  .btn-cargar-mas{
+
+    border:none;
+
+    padding:.9rem 1rem;
+
+    border-radius:14px;
+
+    background:#f1f5f9;
+
+    color:#334155;
+
+    cursor:pointer;
+
+    font-weight:700;
+
+    transition:.25s ease;
+  }
+
+  .btn-cargar-mas:hover{
+
+    background:#e2e8f0;
+  }
+
+  /* EMPTY */
+
+  .empty-comments{
+
+    text-align:center;
+
+    padding:2rem;
+
+    color:#64748b;
+  }
+
+  .loading{
+
+    text-align:center;
+
+    padding:1rem;
+
+    color:#64748b;
+  }
+
+  .cl-error{
+
+    color:#dc2626;
+
+    text-align:center;
+  }
+
+  @media (max-width:768px){
+
+    .stats{
+
+      gap:.7rem;
+    }
+
+    .btn-action{
+
+      width:100%;
+
+      justify-content:center;
+    }
+
+    .comentario-footer{
+
+      flex-direction:column;
+
+      align-items:stretch;
+    }
+
+    .btn-enviar{
+
+      width:100%;
+    }
+  }
+
+</style>
