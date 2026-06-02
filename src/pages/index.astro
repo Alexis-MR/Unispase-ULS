@@ -1,0 +1,128 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="UniSpace ULS">
+
+  <section class="hero">
+    <div class="hero-content">
+      <span class="badge">Plataforma Universitaria</span>
+      <h1>Bienvenido a <span>UniSpace</span> ULS</h1>
+      <p>Tu espacio digital universitario — foro, mapa del campus, podcasts y asistente IA en un solo lugar.</p>
+      <div class="hero-btns">
+        <a href="/foro" class="btn-primary">Ir al Foro</a>
+        <a href="/mapa" class="btn-secondary">Ver Mapa</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <a href="/foro" class="card">
+      <div class="icon">💬</div>
+      <h3>Foro</h3>
+      <p>Discute, pregunta y comparte con otros estudiantes en tiempo real.</p>
+    </a>
+    <a href="/mapa" class="card">
+      <div class="icon">🗺️</div>
+      <h3>Mapa del Campus</h3>
+      <p>Encuentra aulas, laboratorios y espacios del campus fácilmente.</p>
+    </a>
+    <a href="/podcast" class="card">
+      <div class="icon">🎙️</div>
+      <h3>Podcast</h3>
+      <p>Escucha contenido universitario creado por y para estudiantes.</p>
+    </a>
+  </section>
+
+</Layout>
+
+<style>
+  .hero {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: radial-gradient(ellipse at 50% 40%, rgba(37,99,255,0.15) 0%, transparent 70%);
+  }
+
+  .hero-content { max-width: 700px; }
+
+  .badge {
+    display: inline-block;
+    background: rgba(37,99,255,0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(37,99,255,0.3);
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 span { color: #2563ff; }
+
+  .hero-content p {
+    color: rgba(255,255,255,0.55);
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.7;
+  }
+
+  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: #2563ff;
+    color: #fff;
+    padding: 0.85rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    padding: 0.85rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    padding: 4rem 3rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    text-decoration: none;
+    color: #fff;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(37,99,255,0.4); }
+
+  .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .card p { color: rgba(255,255

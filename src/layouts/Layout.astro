@@ -1,0 +1,422 @@
+---
+const { title = "UniSpace ULS" } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="logo">Uni<span>Space</span> ULS</a>
+    <div class="nav-links">
+      <a href="/foro">Foro</a>
+      <a href="/mapa">Mapa</a>
+      <a href="/podcast">Podcast</a>
+    </div>
+    <div class="nav-auth">
+      <div id="nav-user" class="nav-user hidden">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-name">Usuario</span>
+        <button id="btn-logout" class="btn-logout">Salir</button>
+      </div>
+      <a href="/login" id="nav-login" class="btn-nav-login">Iniciar sesión</a>
+    </div>
+  </nav>
+
+  <main>
+    <slot />
+  </main>
+
+  <!-- CHATBOT -->
+  <div id="chat-btn" onclick="toggleChat()">
+    <svg viewBox="0 0 64 64" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect x="12" y="10" width="40" height="30" rx="8" fill="#fbbf24"/>
+      <circle cx="23" cy="24" r="5" fill="#dc2626"/>
+      <circle cx="41" cy="24" r="5" fill="#dc2626"/>
+      <circle cx="23" cy="24" r="2" fill="#fff"/>
+      <circle cx="41" cy="24" r="2" fill="#fff"/>
+      <rect x="20" y="33" width="24" height="4" rx="2" fill="#166534"/>
+      <rect x="30" y="2" width="4" height="10" rx="2" fill="#fbbf24"/>
+      <circle cx="32" cy="2" r="3" fill="#dc2626"/>
+      <rect x="18" y="42" width="28" height="16" rx="6" fill="#fbbf24"/>
+      <rect x="6" y="44" width="10" height="6" rx="3" fill="#fbbf24"/>
+      <rect x="48" y="44" width="10" height="6" rx="3" fill="#fbbf24"/>
+    </svg>
+  </div>
+
+  <div id="chat-box">
+    <div id="chat-header">
+      <div class="chat-header-left">
+        <span class="chat-robot-icon">🤖</span>
+        <span>Luterano — Asistente ULS</span>
+      </div>
+      <button onclick="toggleChat()">✕</button>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input-area">
+      <input id="chat-input" type="text" placeholder="Pregunta algo..." onkeydown="if(event.key==='Enter') sendMessage()" />
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+</body>
+</html>
+
+<style is:global>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #05070f; color: #fff; font-family: 'Space Grotesk', sans-serif; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.2rem 3rem;
+    background: rgba(5,7,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; text-decoration: none; color: #fff; }
+  .logo span { color: #2563ff; }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: #fff; }
+  main { padding-top: 70px; }
+
+  /* ── NAV AUTH ── */
+  .nav-auth { display: flex; align-items: center; gap: 1rem; }
+
+  .btn-nav-login {
+    background: #2563ff;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-nav-login:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563ff, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 800; color: #fff;
+  }
+  #user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .btn-logout {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.4rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .btn-logout:hover { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.2); }
+
+  .hidden { display: none !important; }
+
+  /* ===== FORO CARDS ===== */
+  .post-card {
+    position: relative;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .post-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #2563ff, #7c3aed);
+    border-radius: 4px 0 0 4px;
+    z-index: 1;
+  }
+  .post-card:hover {
+    border-color: rgba(37,99,255,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+  }
+  .post-media img { width: 100%; height: auto; object-fit: contain; display: block; background: #000; }
+  .post-media video { width: 100%; max-height: 420px; display: block; }
+  .post-body { padding: 1.6rem 1.8rem 1.8rem 2.2rem; }
+  .post-cat-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .post-cat {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    background: rgba(37,99,255,0.15); color: #60a5fa;
+    padding: 0.28rem 0.85rem; border-radius: 999px;
+    border: 1px solid rgba(37,99,255,0.25);
+  }
+  .post-num { font-size: 0.72rem; color: rgba(255,255,255,0.2); font-weight: 500; }
+  .post-titulo {
+    font-size: 1.3rem !important; font-weight: 800 !important; line-height: 1.3 !important;
+    color: #fff !important; margin-bottom: 0.8rem !important;
+    letter-spacing: -0.02em !important; display: block !important;
+  }
+  .post-contenido {
+    color: rgba(255,255,255,0.5) !important; font-size: 0.93rem !important;
+    line-height: 1.8 !important; margin-bottom: 1.4rem !important;
+    padding-left: 1rem !important;
+    border-left: 2px solid rgba(37,99,255,0.3) !important;
+    display: block !important;
+  }
+  .post-footer {
+    display: flex !important; align-items: center !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+  }
+  .author-block { display: flex !important; align-items: center !important; gap: 0.8rem !important; }
+  .author-avatar {
+    width: 36px !important; height: 36px !important; border-radius: 50% !important;
+    background: linear-gradient(135deg, #2563ff, #7c3aed) !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 0.85rem !important; font-weight: 800 !important; color: #fff !important;
+    box-shadow: 0 2px 10px rgba(37,99,255,0.35) !important; flex-shrink: 0 !important;
+  }
+  .author-info { display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
+  .author-name { font-size: 0.88rem !important; font-weight: 700 !important; color: #e2e8f0 !important; }
+  .author-date { font-size: 0.72rem !important; color: rgba(255,255,255,0.3) !important; }
+
+  /* ===== PODCAST CARDS ===== */
+  .podcast-card {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s !important;
+  }
+  .podcast-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: rgba(37,99,255,0.25) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
+  }
+  .card-media {
+    width: 100% !important;
+    background: #0d1117 !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+  }
+  .card-media iframe { width: 100% !important; aspect-ratio: 16/9 !important; border: none !important; display: block !important; }
+  .card-media audio { width: 100% !important; padding: 1.5rem 1rem !important; accent-color: #2563ff !important; }
+  .no-media { display: flex !important; align-items: center !important; justify-content: center !important; height: 120px !important; font-size: 3rem !important; opacity: 0.15 !important; }
+  .card-body { padding: 1.4rem 1.5rem 1.5rem !important; display: flex !important; flex-direction: column !important; flex: 1 !important; }
+  .card-meta-top { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 0.85rem !important; }
+  .cat-pill {
+    font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    background: rgba(37,99,255,0.15) !important; color: #60a5fa !important;
+    border: 1px solid rgba(37,99,255,0.2) !important;
+    padding: 0.2rem 0.65rem !important; border-radius: 100px !important;
+  }
+  .card-date { font-size: 0.72rem !important; color: rgba(255,255,255,0.25) !important; }
+  .card-titulo {
+    font-weight: 800 !important; font-size: 1.05rem !important;
+    line-height: 1.25 !important; color: #fff !important;
+    margin-bottom: 0.65rem !important;
+  }
+  .card-desc {
+    color: rgba(255,255,255,0.45) !important; font-size: 0.83rem !important;
+    line-height: 1.7 !important; margin-bottom: 1.2rem !important;
+    padding-left: 0.8rem !important;
+    border-left: 2px solid rgba(124,58,237,0.3) !important;
+    display: -webkit-box !important; -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important; overflow: hidden !important; flex: 1 !important;
+  }
+  .card-author {
+    display: flex !important; align-items: center !important; gap: 0.7rem !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    margin-top: auto !important;
+  }
+  .author-label {
+    font-size: 0.65rem !important; text-transform: uppercase !important;
+    letter-spacing: 0.1em !important; color: rgba(255,255,255,0.25) !important;
+  }
+
+  /* ===== CHATBOT ===== */
+  #chat-btn {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(37,99,255,0.5);
+    animation: robotFloat 3s ease-in-out infinite;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes robotFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  #chat-btn:hover { transform: scale(1.15) rotate(-5deg) !important; }
+
+  #chat-box {
+    display: none; flex-direction: column;
+    position: fixed; bottom: 6rem; right: 2rem; z-index: 998;
+    width: 340px; height: 480px;
+    background: #111827; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform-origin: bottom right;
+  }
+  #chat-box.open {
+    display: flex;
+    animation: chatOpen 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  @keyframes chatOpen {
+    from { transform: scale(0.8) translateY(20px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  #chat-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.2rem;
+    background: linear-gradient(135deg, #1e3a8a, #2563ff);
+    color: #fff; font-weight: 600;
+  }
+  .chat-header-left { display: flex; align-items: center; gap: 0.6rem; }
+  .chat-robot-icon { font-size: 1.4rem; animation: robotBob 1s ease-in-out infinite alternate; }
+  @keyframes robotBob {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-3px); }
+  }
+  #chat-header button { background: none; border: none; color: #fff; font-size: 1.1rem; cursor: pointer; }
+
+  #chat-messages {
+    flex: 1; overflow-y: auto; padding: 1rem;
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .msg-user {
+    align-self: flex-end; background: #2563ff; color: #fff;
+    padding: 0.6rem 1rem; border-radius: 14px 14px 4px 14px;
+    font-size: 0.88rem; max-width: 80%;
+    animation: msgIn 0.2s ease;
+  }
+  .msg-bot {
+    align-self: flex-start; background: rgba(255,255,255,0.08); color: #e2e8f0;
+    padding: 0.6rem 1rem; border-radius: 14px 14px 14px 4px;
+    font-size: 0.88rem; max-width: 80%;
+    animation: msgIn 0.2s ease;
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  #chat-input-area { display: flex; gap: 0.5rem; padding: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); }
+  #chat-input {
+    flex: 1; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    padding: 0.6rem 0.9rem; color: #fff;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  #chat-input:focus { border-color: rgba(37,99,255,0.5); }
+  #chat-input-area button {
+    background: #2563ff; color: #fff; border: none; border-radius: 10px;
+    padding: 0.6rem 1rem; cursor: pointer; font-weight: 600;
+    font-size: 0.85rem; transition: all 0.2s;
+  }
+  #chat-input-area button:hover { background: #1d4ed8; transform: scale(1.05); }
+</style>
+
+<script>
+  // ── AUTH EN NAVBAR ──
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  async function initAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    const navUser = document.getElementById('nav-user');
+    const navLogin = document.getElementById('nav-login');
+    const userName = document.getElementById('user-name');
+    const userAvatar = document.getElementById('user-avatar');
+
+    if (session) {
+      navUser.classList.remove('hidden');
+      navLogin.classList.add('hidden');
+      const name = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+      userName.textContent = name;
+      userAvatar.textContent = name.charAt(0).toUpperCase();
+    } else {
+      navUser.classList.add('hidden');
+      navLogin.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  });
+
+  initAuth();
+
+  // ── CHATBOT ──
+  window.toggleChat = function() {
+    const box = document.getElementById('chat-box');
+    box.classList.toggle('open');
+    if (box.classList.contains('open') && document.getElementById('chat-messages').children.length === 0) {
+      addMessage('bot', '¡Hola! 👋 Soy Luterano, tu asistente de UniSpace ULS. Estoy aquí para ayudarte con todo lo de la plataforma y la uni. ¿En qué te puedo ayudar hoy? 🔥');
+    }
+  }
+
+  window.addMessage = function(type, text) {
+    const messages = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = type === 'user' ? 'msg-user' : 'msg-bot';
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  window.sendMessage = async function() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addMessage('user', text);
+    addMessage('bot', '...');
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      document.getElementById('chat-messages').lastChild.textContent = data.reply;
+    } catch {
+      document.getElementById('chat-messages').lastChild.textContent = 'Error al conectar. Intenta de nuevo.';
+    }
+  }
+</script>
