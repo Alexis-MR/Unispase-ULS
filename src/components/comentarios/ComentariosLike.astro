@@ -60,6 +60,12 @@ const {
 
   </div>
 
+  <!-- AVISO NO LOGUEADO -->
+  <div class="auth-notice" style="display:none;">
+    <span class="auth-notice-icon">🔒</span>
+    <p>Debes <a href="/login">iniciar sesión</a> para realizar esta acción.</p>
+  </div>
+
   <!-- COMENTARIOS -->
   <div
     class="comentarios-section"
@@ -68,6 +74,7 @@ const {
 
     <div class="comentarios-lista"></div>
 
+    <!-- FORM solo para usuarios logueados -->
     <form class="form-comentario">
 
       <textarea
@@ -95,6 +102,14 @@ const {
 
     </form>
 
+    <!-- AVISO login dentro de la sección de comentarios -->
+    <div class="login-para-comentar" style="display:none;">
+      <span>🔒</span>
+      <span>
+        <a href="/login">Inicia sesión</a> para dejar un comentario.
+      </span>
+    </div>
+
     <button
       class="btn-cargar-mas"
       style="display:none;"
@@ -116,6 +131,10 @@ const {
     toggleLike,
   } from "../../lib/like";
 
+  import {
+    isAuthenticated,
+  } from "../../lib/auth";
+
   const comentariosState = new Map();
 
   function renderComentario(comentario) {
@@ -129,7 +148,7 @@ const {
     div.innerHTML = `
       <div class="comentario-header">
         <div class="comentario-avatar">
-         <a href="/usuario/${comentario.user_id}/usuario"}> 
+         <a href="/usuario/${comentario.user_id}/usuario"}>
           ${comentario.user.nombre}</a>
         </div>
       </div>
@@ -189,6 +208,16 @@ const {
           ".form-comentario"
         );
 
+      const loginParaComentar =
+        wrapper.querySelector(
+          ".login-para-comentar"
+        );
+
+      const authNotice =
+        wrapper.querySelector(
+          ".auth-notice"
+        );
+
       const textarea =
         wrapper.querySelector(
           ".input-comentario"
@@ -231,10 +260,24 @@ const {
             section.style.display !==
             "none";
 
+          // Ocultar aviso de auth al abrir/cerrar
+          authNotice.style.display = "none";
+
           section.style.display =
             visible
               ? "none"
               : "flex";
+
+          // Mostrar u ocultar formulario según auth
+          if (!visible) {
+            if (isAuthenticated()) {
+              form.style.display = "flex";
+              loginParaComentar.style.display = "none";
+            } else {
+              form.style.display = "none";
+              loginParaComentar.style.display = "flex";
+            }
+          }
 
           if (
             !visible &&
@@ -250,7 +293,7 @@ const {
               `;
 
               const data =
-                await getComentarios(id,tipo);
+                await getComentarios(id, tipo);
 
               lista.innerHTML = "";
 
@@ -327,6 +370,7 @@ const {
             const data =
               await getComentarios(
                 id,
+                tipo,
                 10,
                 state.offset
               );
@@ -378,6 +422,13 @@ const {
         async (e) => {
 
           e.preventDefault();
+
+          // Verificar sesión antes de enviar
+          if (!isAuthenticated()) {
+            form.style.display = "none";
+            loginParaComentar.style.display = "flex";
+            return;
+          }
 
           const comentario =
             textarea.value.trim();
@@ -446,6 +497,22 @@ const {
       btnLike.addEventListener(
         "click",
         async () => {
+
+          // Verificar sesión antes de dar like
+          if (!isAuthenticated()) {
+            // Cerrar sección de comentarios si estaba abierta
+            section.style.display = "none";
+
+            // Mostrar aviso de auth
+            authNotice.style.display = "flex";
+
+            // Ocultar aviso después de 4 segundos
+            setTimeout(() => {
+              authNotice.style.display = "none";
+            }, 4000);
+
+            return;
+          }
 
           if (
             btnLike.dataset.loading
@@ -580,6 +647,59 @@ const {
       );
 
     color:#dc2626;
+  }
+
+  /* AVISO NO LOGUEADO (sobre los botones) */
+
+  .auth-notice{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.75rem;
+
+    padding:.9rem 1.2rem;
+
+    border-radius:16px;
+
+    background:
+      linear-gradient(
+        135deg,
+        rgba(251,191,36,.12),
+        rgba(245,158,11,.08)
+      );
+
+    border:1px solid rgba(251,191,36,.35);
+
+    animation: fadeIn .25s ease;
+  }
+
+  .auth-notice-icon{
+
+    font-size:1.3rem;
+
+    flex-shrink:0;
+  }
+
+  .auth-notice p{
+
+    margin:0;
+
+    color:#92400e;
+
+    font-size:.9rem;
+
+    font-weight:600;
+  }
+
+  .auth-notice p a{
+
+    color:#b45309;
+
+    font-weight:700;
+
+    text-decoration:underline;
   }
 
   /* COMENTARIOS */
@@ -807,6 +927,45 @@ const {
     cursor:not-allowed;
   }
 
+  /* AVISO LOGIN PARA COMENTAR */
+
+  .login-para-comentar{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.6rem;
+
+    padding:.9rem 1.1rem;
+
+    border-radius:14px;
+
+    background:
+      linear-gradient(
+        135deg,
+        rgba(37,99,235,.07),
+        rgba(124,58,237,.07)
+      );
+
+    border:1px solid rgba(37,99,235,.18);
+
+    font-size:.9rem;
+
+    color:#334155;
+
+    font-weight:600;
+  }
+
+  .login-para-comentar a{
+
+    color:#2563eb;
+
+    font-weight:700;
+
+    text-decoration:underline;
+  }
+
   /* LOAD MORE */
 
   .btn-cargar-mas{
@@ -858,6 +1017,19 @@ const {
     color:#dc2626;
 
     text-align:center;
+  }
+
+  @keyframes fadeIn{
+
+    from{
+      opacity:0;
+      transform:translateY(-6px);
+    }
+
+    to{
+      opacity:1;
+      transform:translateY(0);
+    }
   }
 
   @media (max-width:768px){

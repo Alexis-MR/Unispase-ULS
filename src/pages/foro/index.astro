@@ -48,7 +48,7 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   </div>
 </Layout>
 
-<style>
+<style is:global>
   .foro-container { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; }
 
   .foro-header {
@@ -112,16 +112,10 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     padding: 1rem;
   }
   .preview-item {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #0d1117;
+    position: relative; aspect-ratio: 1;
+    border-radius: 10px; overflow: hidden; background: #0d1117;
   }
-  .preview-item img, .preview-item video {
-    width: 100%; height: 100%;
-    object-fit: cover; display: block;
-  }
+  .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .preview-remove {
     position: absolute; top: 6px; right: 6px;
     background: rgba(0,0,0,0.75); color: #fff; border: none;
@@ -181,19 +175,10 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     transform: translateY(-4px);
     box-shadow: 0 16px 48px rgba(0,0,0,0.35);
   }
-
-  .post-media img {
-    width: 100%; max-height: 420px;
-    object-fit: cover; display: block;
-  }
+  .post-media img { width: 100%; max-height: 420px; object-fit: cover; display: block; }
   .post-media video { width: 100%; max-height: 420px; display: block; }
-
   .post-body { padding: 1.6rem 1.8rem 1.8rem 2.2rem; }
-
-  .post-cat-row {
-    display: flex; align-items: center; gap: 0.6rem;
-    margin-bottom: 0.8rem;
-  }
+  .post-cat-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
   .post-cat {
     font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
     background: rgba(37,99,255,0.15); color: #60a5fa;
@@ -201,24 +186,21 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     border: 1px solid rgba(37,99,255,0.25);
   }
   .post-num { font-size: 0.72rem; color: rgba(255,255,255,0.2); font-weight: 500; }
-
   .post-titulo {
     font-size: 1.3rem; font-weight: 800; line-height: 1.3;
-    color: #fff; margin-bottom: 0.8rem;
-    letter-spacing: -0.02em;
+    color: #fff; margin-bottom: 0.8rem; letter-spacing: -0.02em;
   }
-
   .post-contenido {
     color: rgba(255,255,255,0.5); font-size: 0.93rem;
     line-height: 1.8; margin-bottom: 1.4rem;
     padding-left: 1rem;
     border-left: 2px solid rgba(37,99,255,0.3);
   }
-
   .post-footer {
-    display: flex; align-items: center;
+    display: flex; align-items: center; justify-content: space-between;
     padding-top: 1rem;
     border-top: 1px solid rgba(255,255,255,0.06);
+    flex-wrap: wrap; gap: 0.8rem;
   }
   .author-block { display: flex; align-items: center; gap: 0.8rem; }
   .author-avatar {
@@ -232,189 +214,468 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   .author-name { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; }
   .author-date { font-size: 0.72rem; color: rgba(255,255,255,0.3); }
 
+  /* ===== ACCIONES (likes / comentarios) ===== */
+  .post-actions {
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .btn-accion {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease;
+    letter-spacing: 0.01em;
+    position: relative; overflow: hidden;
+  }
+  .btn-accion::after {
+    content: ''; position: absolute; inset: 0;
+    background: white; opacity: 0;
+    transition: opacity 0.15s; border-radius: inherit;
+  }
+  .btn-accion:hover::after { opacity: 0.06; }
+
+  /* LIKE — normal */
+  .btn-like {
+    background: rgba(244,63,94,0.08);
+    border: 1.5px solid rgba(244,63,94,0.2);
+    color: rgba(251,113,133,0.75);
+  }
+  .btn-like:hover {
+    background: rgba(244,63,94,0.14);
+    border-color: rgba(244,63,94,0.4);
+    color: #fb7185;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(244,63,94,0.2);
+  }
+  .btn-like .like-icon {
+    font-size: 1rem; display: inline-block;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .btn-like:hover .like-icon { transform: scale(1.25); }
+
+  /* LIKE — activo */
+  .btn-like.liked {
+    background: rgba(244,63,94,0.18);
+    border-color: rgba(244,63,94,0.55);
+    color: #f43f5e;
+    box-shadow: 0 0 0 3px rgba(244,63,94,0.1);
+  }
+  .btn-like.liked .like-icon {
+    animation: heartbeat 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes heartbeat {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  /* COMENTARIOS — normal */
+  .btn-comentarios {
+    background: rgba(99,102,241,0.08);
+    border: 1.5px solid rgba(99,102,241,0.2);
+    color: rgba(165,180,252,0.75);
+  }
+  .btn-comentarios:hover {
+    background: rgba(99,102,241,0.14);
+    border-color: rgba(99,102,241,0.4);
+    color: #a5b4fc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.2);
+  }
+
+  /* COMENTARIOS — abierto */
+  .btn-comentarios.comentado {
+    background: rgba(99,102,241,0.18);
+    border-color: rgba(99,102,241,0.55);
+    color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+
+  /* ===== SECCIÓN COMENTARIOS ===== */
+  .comentarios-section {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 1.2rem 1.8rem 1.4rem 2.2rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .comentario-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 0.85rem 1rem;
+  }
+  .comentario-autor {
+    font-size: 0.8rem; font-weight: 700;
+    color: #93c5fd; margin-bottom: 0.35rem;
+  }
+  .comentario-texto {
+    font-size: 0.88rem; color: rgba(255,255,255,0.6); line-height: 1.6;
+  }
+  .comentarios-empty {
+    font-size: 0.85rem; color: rgba(255,255,255,0.25);
+    text-align: center; padding: 0.5rem 0;
+  }
+
+  /* form comentar */
+  .form-comentar {
+    display: flex; gap: 0.6rem; align-items: flex-end;
+  }
+  .form-comentar textarea {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 0.7rem 0.9rem;
+    color: #fff; font-family: inherit; font-size: 0.88rem;
+    resize: none; outline: none; min-height: 42px; max-height: 120px;
+    transition: border-color 0.2s;
+  }
+  .form-comentar textarea:focus { border-color: rgba(37,99,255,0.5); }
+  .form-comentar textarea::placeholder { color: rgba(255,255,255,0.25); }
+  .form-comentar button {
+    background: #2563ff; color: #fff; border: none;
+    border-radius: 12px; padding: 0.7rem 1.1rem;
+    font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .form-comentar button:hover { background: #1d4ed8; }
+  .form-comentar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* aviso login */
+  .aviso-login {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.85rem; color: rgba(255,255,255,0.35);
+    padding: 0.5rem 0;
+  }
+  .aviso-login a { color: #60a5fa; font-weight: 700; text-decoration: underline; }
+
   .loading { text-align: center; color: rgba(255,255,255,0.3); padding: 4rem; font-size: 0.95rem; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 </style>
+
 
 <script>
   import { createClient } from '@supabase/supabase-js';
 
-  const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
-  const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  var SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+  var SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  var supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let currentUser = null;
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) currentUser = session.user;
+  var currentUser = null;
 
-  const btnNuevo = document.getElementById('btn-nuevo');
-  if (!currentUser) {
-    btnNuevo.textContent = '🔒 Inicia sesión para publicar';
-    btnNuevo.style.background = 'rgba(255,255,255,0.06)';
-    btnNuevo.style.border = '1px solid rgba(255,255,255,0.1)';
-    btnNuevo.addEventListener('click', () => window.location.href = '/login');
-  } else {
-    btnNuevo.addEventListener('click', () => {
-      document.getElementById('form-post').classList.toggle('hidden');
+  supabase.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    if (session) currentUser = session.user;
+    initPage();
+  });
+
+  function initPage() {
+    var btnNuevo = document.getElementById('btn-nuevo');
+    if (!currentUser) {
+      btnNuevo.textContent = '🔒 Inicia sesión para publicar';
+      btnNuevo.style.background = 'rgba(255,255,255,0.06)';
+      btnNuevo.style.border = '1px solid rgba(255,255,255,0.1)';
+      btnNuevo.addEventListener('click', function() { window.location.href = '/login'; });
+    } else {
+      btnNuevo.addEventListener('click', function() {
+        document.getElementById('form-post').classList.toggle('hidden');
+      });
+    }
+
+    document.getElementById('btn-cancelar').addEventListener('click', function() {
+      document.getElementById('form-post').classList.add('hidden');
     });
+    document.getElementById('btn-publicar').addEventListener('click', crearPost);
+
+    document.getElementById('input-imagen').addEventListener('change', function(e) {
+      var files = Array.from(e.target.files);
+      archivosSeleccionados = archivosSeleccionados.concat(files);
+      renderPreviews();
+      e.target.value = '';
+    });
+
+    cargarPosts();
   }
 
-  document.getElementById('btn-cancelar').addEventListener('click', () => {
-    document.getElementById('form-post').classList.add('hidden');
-  });
-
-  document.getElementById('btn-publicar').addEventListener('click', crearPost);
-
-  // ── PREVIEWS ──
-  let archivosSeleccionados = [];
-
-  document.getElementById('input-imagen').addEventListener('change', (e) => {
-    archivosSeleccionados = [...archivosSeleccionados, ...Array.from(e.target.files)];
-    renderPreviews();
-    e.target.value = '';
-  });
+  var archivosSeleccionados = [];
 
   function renderPreviews() {
-    const preview = document.getElementById('preview-container');
-    const placeholder = document.getElementById('upload-placeholder');
+    var preview = document.getElementById('preview-container');
+    var placeholder = document.getElementById('upload-placeholder');
     preview.innerHTML = '';
-
     if (archivosSeleccionados.length === 0) {
       preview.classList.add('hidden');
       placeholder.classList.remove('hidden');
       return;
     }
-
     placeholder.classList.add('hidden');
     preview.classList.remove('hidden');
-
-    archivosSeleccionados.forEach((file, i) => {
-      const url = URL.createObjectURL(file);
-      const item = document.createElement('div');
+    archivosSeleccionados.forEach(function(file, i) {
+      var url = URL.createObjectURL(file);
+      var item = document.createElement('div');
       item.className = 'preview-item';
-
-      const isVideo = file.type.startsWith('video/');
-      const media = isVideo
-        ? Object.assign(document.createElement('video'), { src: url })
-        : Object.assign(document.createElement('img'), { src: url, alt: 'preview' });
-
-      const removeBtn = document.createElement('button');
+      var isVideo = file.type.startsWith('video/');
+      var media;
+      if (isVideo) {
+        media = document.createElement('video');
+        media.src = url;
+      } else {
+        media = document.createElement('img');
+        media.src = url;
+        media.alt = 'preview';
+      }
+      var removeBtn = document.createElement('button');
       removeBtn.className = 'preview-remove';
       removeBtn.textContent = '✕';
-      removeBtn.onclick = () => {
-        archivosSeleccionados.splice(i, 1);
-        renderPreviews();
-      };
-
+      removeBtn.onclick = (function(idx) {
+        return function() { archivosSeleccionados.splice(idx, 1); renderPreviews(); };
+      })(i);
       item.appendChild(media);
       item.appendChild(removeBtn);
       preview.appendChild(item);
     });
-
-    const addMore = document.createElement('div');
+    var addMore = document.createElement('div');
     addMore.className = 'preview-add';
     addMore.textContent = '+';
-    addMore.onclick = () => document.getElementById('input-imagen').click();
+    addMore.onclick = function() { document.getElementById('input-imagen').click(); };
     preview.appendChild(addMore);
   }
 
-  // ── CARGAR POSTS ──
-  async function cargarPosts() {
-    const lista = document.getElementById('posts-lista');
+  function renderMedia(imagen_url) {
+    if (!imagen_url) return '';
+    var items = imagen_url.split(',').map(function(url) {
+      if (url.match(/\.(mp4|webm|ogg)$/i)) {
+        return '<video controls style="width:100%;max-height:400px;object-fit:contain;background:#000"><source src="' + url + '" /></video>';
+      }
+      return '<img src="' + url + '" alt="imagen" style="width:100%;max-height:500px;object-fit:contain;background:#000;cursor:pointer" />';
+    });
+    return '<div class="post-media">' + items.join('') + '</div>';
+  }
+
+  function renderComentariosList(lista_com) {
+    if (lista_com.length === 0) {
+      return '<p class="comentarios-empty">Aún no hay comentarios</p>';
+    }
+    return lista_com.map(function(c) {
+      return '<div class="comentario-item"><div class="comentario-autor">' + (c.autor_nombre || 'Usuario') + '</div><div class="comentario-texto">' + c.texto + '</div></div>';
+    }).join('');
+  }
+
+  function renderFormComentario(user) {
+    if (user) {
+      return '<div class="form-comentar"><textarea placeholder="Escribe un comentario..." rows="1"></textarea><button class="btn-enviar-com">Comentar</button></div>';
+    }
+    return '<div class="aviso-login">🔒 <span><a href="/login">Inicia sesi\xF3n</a> para comentar.</span></div>';
+  }
+
+  function cargarPosts() {
+    var lista = document.getElementById('posts-lista');
     lista.innerHTML = '<p class="loading">Cargando posts...</p>';
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?order=created_at.desc`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      const posts = await res.json();
+
+    fetch(SUPABASE_URL + '/rest/v1/posts?order=created_at.desc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(posts) {
       if (!posts.length) {
         lista.innerHTML = '<p class="loading">No hay publicaciones aún. ¡Sé el primero!</p>';
         return;
       }
-      lista.innerHTML = posts.map((p, i) => `
-        <div class="post-card">
-          ${p.imagen_url ? `
-            <div class="post-media">
-              ${p.imagen_url.split(',').map(url =>
-                url.match(/\.(mp4|webm|ogg)$/i)
-                  ? `<video controls style="width:100%;max-height:400px;object-fit:contain;background:#000"><source src="${url}" /></video>`
-                  : `<img src="${url}" alt="imagen" style="width:100%;max-height:500px;object-fit:contain;background:#000;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'500px':'none'" />`
-              ).join('')}
-            </div>` : ''}
-          <div class="post-body">
-            <div class="post-cat-row">
-              <span class="post-cat">${p.categoria}</span>
-              <span class="post-num">#${String(i + 1).padStart(2, '0')}</span>
-            </div>
-            <div class="post-titulo">${p.titulo}</div>
-            <div class="post-contenido">${p.contenido}</div>
-            <div class="post-footer">
-              <div class="author-block">
-                <div class="author-avatar">${p.autor.charAt(0).toUpperCase()}</div>
-                <div class="author-info">
-                  <span class="author-name">${p.autor}</span>
-                  <span class="author-date">${new Date(p.created_at).toLocaleDateString('es-SV', {day:'numeric', month:'short', year:'numeric'})}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    } catch(e) {
+      lista.innerHTML = '';
+      var index = 0;
+
+      function cargarPost(i) {
+        if (i >= posts.length) return;
+        var p = posts[i];
+
+        Promise.all([
+          supabase.from('likes').select('*').eq('post_id', p.id),
+          supabase.from('comentarios').select('id, autor_nombre, texto, created_at').eq('post_id', p.id).order('created_at', { ascending: true })
+        ]).then(function(results) {
+          var likesData = results[0].data || [];
+          var comentariosData = results[1].data || [];
+          var totalLikes = likesData.length;
+          var yaLiked = currentUser ? likesData.some(function(l) { return l.user_id === currentUser.id; }) : false;
+
+          var likeClass = yaLiked ? 'btn-accion btn-like liked' : 'btn-accion btn-like';
+          var likeIcon = yaLiked ? '❤️' : '🤍';
+          var fecha = new Date(p.created_at).toLocaleDateString('es-SV', {day:'numeric', month:'short', year:'numeric'});
+          var num = String(i + 1);
+          while (num.length < 2) num = '0' + num;
+
+          var card = document.createElement('div');
+          card.className = 'post-card';
+          card.dataset.postId = p.id;
+
+          card.innerHTML =
+            renderMedia(p.imagen_url) +
+            '<div class="post-body">' +
+              '<div class="post-cat-row">' +
+                '<span class="post-cat">' + p.categoria + '</span>' +
+                '<span class="post-num">#' + num + '</span>' +
+              '</div>' +
+              '<div class="post-titulo">' + p.titulo + '</div>' +
+              '<div class="post-contenido">' + p.contenido + '</div>' +
+              '<div class="post-footer">' +
+                '<div class="author-block">' +
+                  '<div class="author-avatar">' + p.autor.charAt(0).toUpperCase() + '</div>' +
+                  '<div class="author-info">' +
+                    '<span class="author-name">' + p.autor + '</span>' +
+                    '<span class="author-date">' + fecha + '</span>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="post-actions">' +
+                  '<button class="' + likeClass + '" data-post="' + p.id + '" data-liked="' + yaLiked + '">' +
+                    '<span class="like-icon">' + likeIcon + '</span>' +
+                    '<span class="like-count">' + totalLikes + '</span>' +
+                  '</button>' +
+                  '<button class="btn-accion btn-comentarios" data-post="' + p.id + '">' +
+                    '<span>💬</span>' +
+                    '<span class="com-count">' + comentariosData.length + '</span>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="comentarios-section" style="display:none;" data-post="' + p.id + '">' +
+              '<div class="comentarios-lista">' + renderComentariosList(comentariosData) + '</div>' +
+              renderFormComentario(currentUser) +
+            '</div>';
+
+          lista.appendChild(card);
+          iniciarAcciones(card, p.id, currentUser);
+          cargarPost(i + 1);
+        });
+      }
+
+      cargarPost(0);
+    })
+    .catch(function(e) {
+      console.error(e);
       lista.innerHTML = '<p class="loading">Error al cargar posts.</p>';
-    }
+    });
   }
 
-  // ── CREAR POST ──
-  async function crearPost() {
-    if (!currentUser) { window.location.href = '/login'; return; }
+  function iniciarAcciones(card, postId, user) {
+    var btnLike = card.querySelector('.btn-like');
+    btnLike.addEventListener('click', function() {
+      if (!user) { window.location.href = '/login'; return; }
+      if (btnLike.dataset.loading === 'true') return;
+      btnLike.dataset.loading = 'true';
 
-    const autor = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-    const titulo = document.getElementById('input-titulo').value.trim();
-    const categoria = document.getElementById('input-categoria').value;
-    const contenido = document.getElementById('input-contenido').value.trim();
+      var yaLiked = btnLike.dataset.liked === 'true';
+      var countEl = btnLike.querySelector('.like-count');
+      var iconEl = btnLike.querySelector('.like-icon');
+
+      if (yaLiked) {
+        supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id).then(function() {
+          btnLike.dataset.liked = 'false';
+          btnLike.classList.remove('liked');
+          iconEl.textContent = '🤍';
+          countEl.textContent = String(Number(countEl.textContent) - 1);
+          btnLike.dataset.loading = 'false';
+        });
+      } else {
+        supabase.from('likes').insert({ post_id: postId, user_id: user.id }).then(function() {
+          btnLike.dataset.liked = 'true';
+          btnLike.classList.add('liked');
+          iconEl.textContent = '❤️';
+          countEl.textContent = String(Number(countEl.textContent) + 1);
+          btnLike.dataset.loading = 'false';
+        });
+      }
+    });
+
+    var btnCom = card.querySelector('.btn-comentarios');
+    var seccion = card.querySelector('.comentarios-section');
+    btnCom.addEventListener('click', function() {
+      var abierto = seccion.style.display !== 'none';
+      seccion.style.display = abierto ? 'none' : 'flex';
+      btnCom.classList.toggle('comentado', !abierto);
+    });
+
+    var formCom = card.querySelector('.form-comentar');
+    if (!formCom || !user) return;
+
+    var textarea = formCom.querySelector('textarea');
+    var btnEnviar = formCom.querySelector('.btn-enviar-com');
+    var listaEl = card.querySelector('.comentarios-lista');
+    var comCount = card.querySelector('.com-count');
+
+    btnEnviar.addEventListener('click', function() {
+      var texto = textarea.value.trim();
+      if (!texto) return;
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = 'Enviando...';
+
+      var nombreAutor = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name : user.email.split('@')[0];
+
+      supabase.from('comentarios')
+        .insert({ post_id: postId, user_id: user.id, autor_nombre: nombreAutor, texto: texto })
+        .select()
+        .then(function(result) {
+          if (result.error) throw result.error;
+          var data = result.data[0];
+          var empty = listaEl.querySelector('.comentarios-empty');
+          if (empty) empty.remove();
+          var item = document.createElement('div');
+          item.className = 'comentario-item';
+          item.innerHTML = '<div class="comentario-autor">' + nombreAutor + '</div><div class="comentario-texto">' + data.texto + '</div>';
+          listaEl.prepend(item);
+          comCount.textContent = String(Number(comCount.textContent) + 1);
+          textarea.value = '';
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = 'Comentar';
+        })
+        .catch(function(e) {
+          console.error(e);
+          alert('Error al enviar el comentario');
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = 'Comentar';
+        });
+    });
+  }
+
+  function crearPost() {
+    if (!currentUser) { window.location.href = '/login'; return; }
+    var autor = (currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0];
+    var titulo = document.getElementById('input-titulo').value.trim();
+    var categoria = document.getElementById('input-categoria').value;
+    var contenido = document.getElementById('input-contenido').value.trim();
     if (!titulo || !contenido) { alert('Completa todos los campos'); return; }
 
-    const btn = document.getElementById('btn-publicar');
+    var btn = document.getElementById('btn-publicar');
     btn.textContent = 'Subiendo...';
     btn.disabled = true;
 
-    const urls = [];
-    for (const file of archivosSeleccionados) {
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage
-        .from('posts-media')
-        .upload(fileName, file, { contentType: file.type });
-      if (!error) {
-        const { data: urlData } = supabase.storage
-          .from('posts-media')
-          .getPublicUrl(fileName);
-        urls.push(urlData.publicUrl);
-      }
-    }
-
-    const imagen_url = urls.length > 0 ? urls.join(',') : null;
-
-    await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({ autor, titulo, categoria, contenido, imagen_url })
+    var uploadPromises = archivosSeleccionados.map(function(file) {
+      var ext = file.name.split('.').pop();
+      var fileName = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+      return supabase.storage.from('posts-media').upload(fileName, file, { contentType: file.type })
+        .then(function(result) {
+          if (!result.error) {
+            return supabase.storage.from('posts-media').getPublicUrl(fileName).data.publicUrl;
+          }
+          return null;
+        });
     });
 
-    btn.textContent = '🚀 Publicar';
-    btn.disabled = false;
-    archivosSeleccionados = [];
-    document.getElementById('form-post').classList.add('hidden');
-    document.getElementById('input-titulo').value = '';
-    document.getElementById('input-contenido').value = '';
-    renderPreviews();
-    cargarPosts();
-  }
+    Promise.all(uploadPromises).then(function(urls) {
+      var validUrls = urls.filter(function(u) { return u !== null; });
+      var imagen_url = validUrls.length > 0 ? validUrls.join(',') : null;
 
-  cargarPosts();
+      return supabase.from('posts').insert({ autor: autor, titulo: titulo, categoria: categoria, contenido: contenido, imagen_url: imagen_url });
+    }).then(function() {
+      btn.textContent = '🚀 Publicar';
+      btn.disabled = false;
+      archivosSeleccionados = [];
+      document.getElementById('form-post').classList.add('hidden');
+      document.getElementById('input-titulo').value = '';
+      document.getElementById('input-contenido').value = '';
+      renderPreviews();
+      cargarPosts();
+    });
+  }
 </script>
