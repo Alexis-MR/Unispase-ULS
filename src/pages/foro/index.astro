@@ -448,18 +448,32 @@ import Layout from '../../layouts/Layout.astro';
     el._t = setTimeout(function() { el.style.display = 'none'; }, 3200);
   }
 
+  var userRol = 'estudiante';
+
   supabase.auth.getSession().then(function(result) {
     var session = result.data.session;
-    if (session) currentUser = session.user;
-    initPage();
+    if (session) {
+      currentUser = session.user;
+      // Obtener rol del perfil
+      supabase.from('perfiles').select('rol').eq('id', currentUser.id).single()
+        .then(function(res) {
+          if (res.data) userRol = res.data.rol;
+          initPage();
+        })
+        .catch(function() { initPage(); });
+    } else {
+      initPage();
+    }
   });
 
   function initPage() {
     var btnNuevo = document.getElementById('btn-nuevo');
     if (!currentUser) {
       btnNuevo.addEventListener('click', function() {
-        toast('Necesitas iniciar sesi\xF3n para publicar', 'warn');
+        toast('\uD83D\uDD12 Necesitas iniciar sesi\xF3n para participar', 'warn');
       });
+    } else if (userRol === 'estudiante') {
+      btnNuevo.style.display = 'none'; // estudiantes no publican
     } else {
       btnNuevo.addEventListener('click', function() {
         document.getElementById('form-post').classList.toggle('hidden');
@@ -751,7 +765,10 @@ import Layout from '../../layouts/Layout.astro';
           var totalLikes = likesData.length;
           var yaLiked = currentUser ? likesData.some(function(l) { return l.user_id === currentUser.id; }) : false;
           var nombreSesion   = currentUser ? ((currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0]) : '';
-          var esAutor = currentUser && (p.user_id === currentUser.id || p.autor === nombreSesion);
+          var esAutor = currentUser && (
+            userRol === 'admin' ||
+            (userRol === 'docente' && (p.user_id === currentUser.id || p.autor === nombreSesion))
+          );
 
           var likeClass = yaLiked ? 'btn-accion btn-like liked' : 'btn-accion btn-like';
           var likeIcon  = yaLiked ? '\u2764\uFE0F' : '\uD83E\uDD0D';
@@ -882,6 +899,7 @@ import Layout from '../../layouts/Layout.astro';
 
   function crearPost() {
     if (!currentUser) { toast('\uD83D\uDD12 Necesitas iniciar sesi\xF3n para publicar', 'warn'); return; }
+    if (userRol === 'estudiante') { toast('Solo docentes y administradores pueden publicar', 'warn'); return; }
     var autor     = (currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0];
     var titulo    = document.getElementById('input-titulo').value.trim();
     var categoria = document.getElementById('input-categoria').value;
