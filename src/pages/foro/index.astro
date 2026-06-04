@@ -67,7 +67,7 @@ import Layout from '../../layouts/Layout.astro';
         <h1>Foro Estudiantil</h1>
         <p>Comparte ideas, preguntas y recursos con tu comunidad</p>
       </div>
-      <button id="btn-nuevo">+ Nueva publicación</button>
+      <button id="btn-nuevo" style="visibility:hidden" >+ Nueva publicación</button>
     </div>
 
     <div id="form-post" class="form-card hidden">
@@ -472,12 +472,13 @@ import Layout from '../../layouts/Layout.astro';
       btnNuevo.addEventListener('click', function() {
         toast('\uD83D\uDD12 Necesitas iniciar sesi\xF3n para participar', 'warn');
       });
-    } else if (userRol === 'estudiante') {
-      btnNuevo.style.display = 'none'; // estudiantes no publican
-    } else {
-      btnNuevo.addEventListener('click', function() {
+    } else if (userRol === 'admin' || userRol === 'docente') {
+      btnNuevo.style.visibility = 'visible'; // estudiantes no publican
+            btnNuevo.addEventListener('click', function() {
         document.getElementById('form-post').classList.toggle('hidden');
       });
+    } else {
+
     }
 
     document.getElementById('btn-cancelar').addEventListener('click', function() {

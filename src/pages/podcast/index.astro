@@ -20,7 +20,7 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <h1>Podcast <em>ULS</em></h1>
         <p class="sub">Voces universitarias. Ideas que importan.</p>
       </div>
-      <button id="btn-nuevo" class="add-btn">
+      <button id="btn-nuevo" class="add-btn" style="visibility:hidden">
         <span class="plus">+</span>
         <span>Nuevo episodio</span>
       </button>
@@ -469,11 +469,50 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   .sk-meta { height: 10px; width: 45%; margin-top: 0.8rem; }
 </style>
 
-<script define:vars={{ SUPABASE_URL, SUPABASE_KEY }}>
+<script>
+  import { createClient } from '@supabase/supabase-js';
+  
+  var SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+  var SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  var supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
   const drawer = document.getElementById('form-podcast');
+  const add = document.getElementById('btn-nuevo');
+
+  var rol = '';
+
+  function mostrar (rol){
+    if (rol=='admin' || rol=='docente') {
+      add.style.visibility = 'visible';
+    } else {
+      add.style.visibility = 'hidden';
+    }   
+  };
+
+  supabase.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    if (session) {
+      var currentUser = session.user;
+      // Obtener rol del perfil
+      supabase.from('perfiles').select('rol').eq('id', currentUser.id).single()
+        .then(function(res) {
+          if (res.data) rol = res.data.rol;
+          mostrar(rol);
+        })
+        .catch(function() { initPage(); });
+    } else {
+      mostrar(null);
+       add.addEventListener('click', function() {
+        alert('Inicia sesión para publicar episodios');
+       });
+    }
+  });
+
   drawer.style.maxHeight = '0';
 
+    
   document.getElementById('btn-nuevo').addEventListener('click', () => {
+
     const isOpen = drawer.style.maxHeight !== '0px' && drawer.style.maxHeight !== '0';
     drawer.style.maxHeight = isOpen ? '0' : '700px';
   });

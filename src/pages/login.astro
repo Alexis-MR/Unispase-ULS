@@ -42,13 +42,7 @@ import Layout from '../layouts/Layout.astro';
           <label>Correo electrónico</label>
           <input id="reg-email" type="email" placeholder="tu@correo.com" />
         </div>
-        <div class="field-group">
-          <label>Rol</label>
-          <select id="reg-rol">
-            <option value="estudiante">Estudiante</option>
-            <option value="docente">Docente</option>
-          </select>
-        </div>
+
         <div class="field-group">
           <label>Contraseña</label>
           <input id="reg-password" type="password" placeholder="Mínimo 6 caracteres" />
@@ -256,12 +250,12 @@ import Layout from '../layouts/Layout.astro';
     btn.textContent = 'Creando cuenta...';
     btn.disabled = true;
 
-    const rol = document.getElementById('reg-rol').value;
+   
 
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: nombre, rol: rol } }
+      options: { data: { full_name: nombre } }
     });
 
     // Insertar perfil manualmente por si el trigger falla
@@ -270,7 +264,7 @@ import Layout from '../layouts/Layout.astro';
         id: signUpData.user.id,
         nombre: nombre,
         email: email,
-        rol: rol
+
       });
     }
 
