@@ -785,7 +785,7 @@ import Layout from '../../layouts/Layout.astro';
                     '<span class="like-icon">' + likeIcon + '</span><span class="like-count">' + totalLikes + '</span>' +
                   '</button>' +
                   '<button class="btn-accion btn-comentarios" data-post="' + p.id + '">' +
-                    '<span>\uD83D\uDCAC</span><span class="com-count">' + comentariosData.length + '</span>' +
+                    '<span>\uD83D\uDCAC</span><span class="com-count">' + comentariosData.length + '</span><span class="com-label"> Ver comentarios</span>' +
                   '</button>' +
                 '</div>' +
               '</div>' +
@@ -842,10 +842,12 @@ import Layout from '../../layouts/Layout.astro';
 
     var btnCom  = card.querySelector('.btn-comentarios');
     var seccion = card.querySelector('.comentarios-section');
+    var comLabel = btnCom.querySelector('.com-label');
     btnCom.addEventListener('click', function() {
       var abierto = seccion.style.display !== 'none';
       seccion.style.display = abierto ? 'none' : 'flex';
       btnCom.classList.toggle('comentado', !abierto);
+      if (comLabel) comLabel.textContent = abierto ? ' Ver comentarios' : ' Ocultar';
     });
 
     var formCom = card.querySelector('.form-comentar');

@@ -313,6 +313,63 @@ const { title = "UniSpace ULS" } = Astro.props;
     letter-spacing: 0.1em !important; color: rgba(255,255,255,0.25) !important;
   }
 
+  /* ===== COMENTARIOS FORO ===== */
+  .comentarios-section {
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding: 1.2rem 1.8rem 1.4rem 2.2rem !important;
+    flex-direction: column !important; gap: 0.9rem !important;
+  }
+  .comentarios-section[style*="display:none"] { display: none !important; }
+  .comentarios-section[style*="display: none"] { display: none !important; }
+  .comentarios-section[style*="display:flex"] { display: flex !important; }
+  .comentarios-section[style*="display: flex"] { display: flex !important; }
+  .comentarios-lista { display: flex !important; flex-direction: column !important; gap: 0.7rem !important; }
+  .comentario-item {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 14px !important; padding: 0.8rem 1rem !important;
+    display: block !important;
+  }
+  .comentario-autor {
+    font-size: 0.78rem !important; font-weight: 700 !important;
+    color: #93c5fd !important; margin-bottom: 0.3rem !important;
+    display: block !important;
+  }
+  .comentario-texto {
+    font-size: 0.87rem !important; color: rgba(255,255,255,0.6) !important;
+    line-height: 1.65 !important; display: block !important;
+  }
+  .comentarios-empty {
+    font-size: 0.82rem !important; color: rgba(255,255,255,0.2) !important;
+    text-align: center !important; padding: 0.4rem 0 !important;
+  }
+  .form-comentar {
+    display: flex !important; gap: 0.6rem !important; align-items: flex-end !important;
+    margin-top: 0.3rem !important;
+  }
+  .form-comentar textarea {
+    flex: 1 !important; background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px !important;
+    padding: 0.65rem 0.9rem !important; color: #fff !important;
+    font-family: 'Space Grotesk', sans-serif !important; font-size: 0.86rem !important;
+    resize: none !important; outline: none !important;
+    min-height: 40px !important; max-height: 120px !important;
+  }
+  .form-comentar button {
+    background: linear-gradient(135deg,#2563ff,#7c3aed) !important; color: #fff !important;
+    border: none !important; border-radius: 12px !important;
+    padding: 0.65rem 1.1rem !important; font-weight: 700 !important;
+    font-size: 0.83rem !important; cursor: pointer !important; white-space: nowrap !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+  }
+  .aviso-login {
+    display: flex !important; align-items: center !important; gap: 0.5rem !important;
+    background: rgba(251,191,36,0.07) !important; border: 1px solid rgba(251,191,36,0.2) !important;
+    border-radius: 12px !important; padding: 0.7rem 1rem !important;
+    font-size: 0.84rem !important; color: rgba(255,255,255,0.45) !important;
+  }
+  .aviso-login a { color: #60a5fa !important; font-weight: 700 !important; text-decoration: underline !important; }
+
   /* ===== CHATBOT ===== */
   #chat-btn {
     position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
