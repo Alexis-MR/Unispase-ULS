@@ -188,10 +188,62 @@ const { title = "UniSpace ULS" } = Astro.props;
   }
   .post-footer {
     display: flex !important; align-items: center !important;
+    justify-content: space-between !important;
     padding-top: 1rem !important;
     border-top: 1px solid rgba(255,255,255,0.06) !important;
+    flex-wrap: wrap !important; gap: 0.8rem !important;
   }
   .author-block { display: flex !important; align-items: center !important; gap: 0.8rem !important; }
+
+  /* ===== GALERÍA ===== */
+  .post-gallery { display: grid !important; gap: 3px !important; width: 100% !important; }
+  .post-gallery.g1 { grid-template-columns: 1fr !important; }
+  .post-gallery.g2 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.g3 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.g3 .gal-item:first-child { grid-column: 1 / -1 !important; }
+  .post-gallery.g4 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.gn { grid-template-columns: 1fr 1fr 1fr !important; }
+  .gal-item { position: relative !important; overflow: hidden !important; background: #000 !important; cursor: pointer !important; }
+  .gal-item img, .gal-item video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; max-height: unset !important; transition: transform 0.3s; }
+  .gal-item:hover img, .gal-item:hover video { transform: scale(1.03); }
+  .post-gallery.g1 .gal-item { height: auto !important; max-height: none !important; }
+  .post-gallery.g1 .gal-item img, .post-gallery.g1 .gal-item video { height: auto !important; max-height: none !important; object-fit: contain !important; background: #000 !important; }
+  .post-gallery.g2 .gal-item { height: 240px !important; }
+  .post-gallery.g3 .gal-item:first-child { height: 280px !important; }
+  .post-gallery.g3 .gal-item:not(:first-child) { height: 185px !important; }
+  .post-gallery.g4 .gal-item { height: 200px !important; }
+  .post-gallery.gn .gal-item { height: 170px !important; }
+  .gal-more { position: absolute !important; inset: 0 !important; background: rgba(0,0,0,0.58) !important; display: flex !important; align-items: center !important; justify-content: center !important; color: #fff !important; font-size: 2rem !important; font-weight: 800 !important; }
+
+  /* ===== BOTONES ACCIONES FORO ===== */
+  .post-actions { display: flex !important; align-items: center !important; gap: 0.5rem !important; }
+  .btn-accion {
+    display: flex !important; align-items: center !important; gap: 0.4rem !important;
+    padding: 0.45rem 1rem !important; border-radius: 999px !important;
+    font-size: 0.82rem !important; font-weight: 700 !important; cursor: pointer !important;
+    transition: all 0.22s !important;
+    border: 1.5px solid rgba(255,255,255,0.12) !important;
+    background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.55) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+  }
+  .btn-accion:hover { background: rgba(255,255,255,0.12) !important; color: #fff !important; border-color: rgba(255,255,255,0.22) !important; transform: translateY(-1px) !important; }
+  .btn-accion.liked { background: rgba(239,68,68,0.18) !important; border-color: rgba(239,68,68,0.45) !important; color: #f87171 !important; }
+  .btn-accion.comentado { background: rgba(37,99,255,0.18) !important; border-color: rgba(37,99,255,0.45) !important; color: #60a5fa !important; }
+
+  /* ===== CRUD BOTONES ===== */
+  .post-crud { position: absolute !important; top: 1rem !important; right: 1rem !important; display: flex !important; gap: 0.4rem !important; z-index: 10 !important; }
+  .btn-crud {
+    display: flex !important; align-items: center !important; gap: 0.3rem !important;
+    padding: 0.3rem 0.75rem !important; border-radius: 999px !important;
+    font-size: 0.75rem !important; font-weight: 700 !important; cursor: pointer !important;
+    transition: all 0.2s !important; backdrop-filter: blur(8px) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+  }
+  .btn-crud.btn-editar { background: rgba(234,179,8,0.15) !important; border: 1px solid rgba(234,179,8,0.3) !important; color: #facc15 !important; }
+  .btn-crud.btn-editar:hover { background: rgba(234,179,8,0.28) !important; color: #fde047 !important; transform: translateY(-1px) !important; }
+  .btn-crud.btn-eliminar { background: rgba(239,68,68,0.13) !important; border: 1px solid rgba(239,68,68,0.28) !important; color: #f87171 !important; }
+  .btn-crud.btn-eliminar:hover { background: rgba(239,68,68,0.26) !important; color: #fca5a5 !important; transform: translateY(-1px) !important; }
   .author-avatar {
     width: 36px !important; height: 36px !important; border-radius: 50% !important;
     background: linear-gradient(135deg, #2563ff, #7c3aed) !important;

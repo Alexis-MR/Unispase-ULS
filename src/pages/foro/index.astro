@@ -1,10 +1,66 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Foro — UniSpace ULS">
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <!-- MODAL CONFIRMAR ELIMINAR -->
+  <div id="modal-confirmar" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-confirm">
+      <div class="confirm-icon">🗑️</div>
+      <h3>¿Eliminar publicación?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="modal-btns">
+        <button id="confirm-cancelar" class="btn-cancel">Cancelar</button>
+        <button id="confirm-ok" class="btn-danger">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR -->
+  <div id="modal-editar" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✏️ Editar publicación</h3>
+        <button id="modal-cerrar" class="modal-close">✕</button>
+      </div>
+      <select id="edit-categoria" class="modal-input">
+        <option value="general">General</option>
+        <option value="academico">Académico</option>
+        <option value="eventos">Eventos</option>
+        <option value="deportes">Deportes</option>
+      </select>
+      <input id="edit-titulo" type="text" placeholder="Título" class="modal-input" />
+      <textarea id="edit-contenido" placeholder="Contenido" class="modal-textarea"></textarea>
+
+      <!-- IMÁGENES ACTUALES -->
+      <div id="edit-imagenes-actuales" class="edit-imgs-wrap"></div>
+
+      <!-- SUBIR NUEVAS -->
+      <div class="edit-upload-area" onclick="document.getElementById('edit-input-imagen').click()">
+        <input type="file" id="edit-input-imagen" accept="image/*,video/*" multiple hidden />
+        <span>📎</span>
+        <span>Agregar imágenes o videos</span>
+      </div>
+      <div id="edit-preview-container" class="edit-imgs-wrap hidden"></div>
+
+      <div class="modal-btns">
+        <button id="modal-cancelar" class="btn-cancel">Cancelar</button>
+        <button id="modal-guardar" class="btn-submit">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.93);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;">
+    <img id="lightbox-img" src="" style="max-width:92vw;max-height:92vh;border-radius:10px;object-fit:contain;display:none;" />
+    <video id="lightbox-vid" src="" controls style="max-width:92vw;max-height:92vh;border-radius:10px;display:none;"></video>
+    <button onclick="closeLightbox()" style="position:absolute;top:1.2rem;right:1.5rem;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:1.5rem;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+  </div>
+
   <div class="foro-container">
     <div class="foro-header">
       <div>
@@ -19,22 +75,20 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <span>✏️</span>
         <h3>Nueva publicación</h3>
       </div>
-      <div class="form-grid">
-        <select id="input-categoria">
-          <option value="general">General</option>
-          <option value="academico">Académico</option>
-          <option value="eventos">Eventos</option>
-          <option value="deportes">Deportes</option>
-        </select>
-      </div>
-      <input id="input-titulo" type="text" placeholder="Título de la publicación" />
-      <textarea id="input-contenido" placeholder="¿Qué quieres compartir?"></textarea>
+      <select id="input-categoria" class="form-input">
+        <option value="general">General</option>
+        <option value="academico">Académico</option>
+        <option value="eventos">Eventos</option>
+        <option value="deportes">Deportes</option>
+      </select>
+      <input id="input-titulo" type="text" placeholder="Título de la publicación" class="form-input" />
+      <textarea id="input-contenido" placeholder="¿Qué quieres compartir?" class="form-input form-textarea"></textarea>
       <div class="upload-area">
         <input type="file" id="input-imagen" accept="image/*,video/*" multiple hidden />
         <div class="upload-placeholder" id="upload-placeholder" onclick="document.getElementById('input-imagen').click()">
           <span class="upload-icon">📎</span>
           <span>Adjuntar imágenes o videos</span>
-          <span class="upload-hint">Puedes seleccionar varios archivos — JPG, PNG, GIF, MP4</span>
+          <span class="upload-hint">JPG, PNG, GIF, MP4</span>
         </div>
         <div id="preview-container" class="preview-grid hidden"></div>
       </div>
@@ -48,314 +102,331 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   </div>
 </Layout>
 
-<style is:global>
-  .foro-container { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; }
+<style>
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    background: rgba(15,23,42,0.97); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; padding: 0.85rem 1.8rem; border-radius: 14px;
+    font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 9999; white-space: nowrap; animation: slideUp 0.3s ease;
+  }
+  .toast.warn  { border-color: rgba(251,191,36,0.5); color: #fbbf24; }
+  .toast.error { border-color: rgba(239,68,68,0.5);  color: #f87171; }
+  .toast.ok    { border-color: rgba(34,197,94,0.5);  color: #4ade80; }
 
+  /* ── MODALES ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; backdrop-filter: blur(6px);
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-box {
+    background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 22px; padding: 2rem; width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 1rem;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6); margin: 1rem;
+  }
+  /* modal confirmar */
+  .modal-confirm { max-width: 380px; text-align: center; align-items: center; }
+  .confirm-icon { font-size: 2.5rem; }
+  .modal-confirm h3 { font-size: 1.15rem; font-weight: 800; color: #fff; }
+  .modal-confirm p  { font-size: 0.88rem; color: rgba(255,255,255,0.4); margin-top: -0.3rem; }
+  .btn-danger {
+    background: linear-gradient(135deg,#dc2626,#b91c1c); color: #fff; border: none;
+    padding: 0.7rem 1.6rem; border-radius: 12px;
+    cursor: pointer; font-weight: 700; font-size: 0.88rem;
+    transition: all 0.2s; box-shadow: 0 4px 14px rgba(220,38,38,0.35);
+  }
+  .btn-danger:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .modal-header { display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+  .modal-close {
+    background: rgba(255,255,255,0.07); border: none; color: rgba(255,255,255,0.45);
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+    font-size: 0.82rem; transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+  .modal-input, .modal-textarea {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 0.8rem 1rem; color: #fff;
+    font-family: inherit; font-size: 0.9rem; outline: none; width: 100%;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .modal-input:focus, .modal-textarea:focus { border-color: rgba(37,99,255,0.6); }
+  .modal-textarea { min-height: 120px; resize: vertical; }
+  .modal-input option { background: #111827; }
+  .modal-btns { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 0.3rem; }
+
+  /* ── LAYOUT ── */
+  .foro-container { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem; }
   .foro-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.5rem; gap: 1rem; flex-wrap: wrap;
   }
-  .foro-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.3rem; }
-  .foro-header p { color: rgba(255,255,255,0.4); font-size: 0.9rem; }
-  .foro-header button {
-    background: #2563ff; color: #fff; border: none;
-    padding: 0.8rem 1.6rem; border-radius: 12px;
-    font-weight: 700; cursor: pointer; font-size: 0.9rem;
-    transition: all 0.2s; box-shadow: 0 4px 20px rgba(37,99,255,0.4);
-    white-space: nowrap;
-  }
-  .foro-header button:hover { background: #1d4ed8; transform: translateY(-1px); }
+  .foro-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .foro-header p { color: rgba(255,255,255,0.35); font-size: 0.88rem; }
 
+  /* ── FORM NUEVA PUBLI ── */
   .form-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px; padding: 2rem;
-    margin-bottom: 2.5rem;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 1.8rem; margin-bottom: 2.5rem;
     display: flex; flex-direction: column; gap: 1rem;
   }
-  .form-title { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.3rem; }
-  .form-title span { font-size: 1.4rem; }
-  .form-title h3 { font-size: 1.1rem; font-weight: 700; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .form-card input, .form-card textarea, .form-card select {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px; padding: 0.8rem 1rem;
-    color: #fff; font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.9rem; outline: none; width: 100%;
-    transition: border-color 0.2s;
+  .form-title { display: flex; align-items: center; gap: 0.7rem; }
+  .form-title span { font-size: 1.3rem; }
+  .form-title h3 { font-size: 1rem; font-weight: 700; }
+  .form-input {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 0.8rem 1rem; color: #fff;
+    font-family: inherit; font-size: 0.9rem; outline: none; width: 100%;
+    transition: border-color 0.2s; box-sizing: border-box;
   }
-  .form-card input:focus, .form-card textarea:focus, .form-card select:focus {
-    border-color: rgba(37,99,255,0.5);
-  }
-  .form-card input::placeholder, .form-card textarea::placeholder { color: rgba(255,255,255,0.3); }
-  .form-card textarea { min-height: 100px; resize: vertical; }
-  .form-card select option { background: #111827; }
+  .form-input:focus { border-color: rgba(37,99,255,0.55); }
+  .form-input::placeholder { color: rgba(255,255,255,0.28); }
+  .form-input option { background: #111827; }
+  .form-textarea { min-height: 100px; resize: vertical; }
+  .form-btns { display: flex; gap: 0.8rem; justify-content: flex-end; }
 
-  .upload-area {
-    border: 2px dashed rgba(255,255,255,0.1);
-    border-radius: 12px; overflow: hidden; transition: border-color 0.2s;
+  /* ── BTNS GLOBALES ── */
+  .btn-cancel {
+    background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,255,255,0.1); padding: 0.7rem 1.4rem;
+    border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: all 0.2s;
   }
+  .btn-cancel:hover { background: rgba(255,255,255,0.09); color: #fff; }
+  .btn-submit {
+    background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border: none;
+    padding: 0.7rem 1.6rem; border-radius: 12px; cursor: pointer;
+    font-weight: 700; font-size: 0.88rem; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(37,99,255,0.3);
+  }
+  .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  #btn-nuevo {
+    background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border: none;
+    padding: 0.8rem 1.6rem; border-radius: 14px; font-weight: 700; cursor: pointer;
+    font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37,99,255,0.35);
+    white-space: nowrap;
+  }
+  #btn-nuevo:hover { opacity: 0.9; transform: translateY(-1px); }
+  .hidden { display: none !important; }
+
+  /* ── UPLOAD ── */
+  .upload-area { border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
   .upload-area:hover { border-color: rgba(37,99,255,0.4); }
   .upload-placeholder {
     display: flex; flex-direction: column; align-items: center;
-    gap: 0.4rem; padding: 1.5rem; cursor: pointer;
-    color: rgba(255,255,255,0.4); font-size: 0.88rem; transition: color 0.2s;
+    gap: 0.35rem; padding: 1.4rem; cursor: pointer;
+    color: rgba(255,255,255,0.35); font-size: 0.85rem; transition: color 0.2s;
   }
-  .upload-placeholder:hover { color: rgba(255,255,255,0.7); }
-  .upload-icon { font-size: 1.8rem; }
-  .upload-hint { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
-  .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
-  }
-  .preview-item {
-    position: relative; aspect-ratio: 1;
-    border-radius: 10px; overflow: hidden; background: #0d1117;
-  }
+  .upload-placeholder:hover { color: rgba(255,255,255,0.65); }
+  .upload-icon { font-size: 1.6rem; }
+  .upload-hint { font-size: 0.72rem; color: rgba(255,255,255,0.2); }
+  .preview-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 0.7rem; padding: 1rem; }
+  .preview-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #0d1117; }
   .preview-item img, .preview-item video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .preview-remove {
-    position: absolute; top: 6px; right: 6px;
-    background: rgba(0,0,0,0.75); color: #fff; border: none;
-    border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
-    font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s;
+    position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.75); color: #fff; border: none;
+    border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.72rem;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
   }
-  .preview-remove:hover { background: rgba(239,68,68,0.8); }
+  .preview-remove:hover { background: rgba(239,68,68,0.85); }
   .preview-add {
-    aspect-ratio: 1;
-    border: 2px dashed rgba(255,255,255,0.15);
-    border-radius: 10px;
+    aspect-ratio: 1; border: 2px dashed rgba(255,255,255,0.12); border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; color: rgba(255,255,255,0.3);
-    font-size: 1.5rem; transition: all 0.2s;
+    cursor: pointer; color: rgba(255,255,255,0.25); font-size: 1.4rem; transition: all 0.2s;
   }
   .preview-add:hover { border-color: rgba(37,99,255,0.5); color: #60a5fa; }
-  .form-btns { display: flex; gap: 0.8rem; justify-content: flex-end; }
-  .btn-cancel {
-    background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 0.7rem 1.4rem; border-radius: 12px;
-    cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
-  }
-  .btn-cancel:hover { background: rgba(255,255,255,0.08); color: #fff; }
-  .btn-submit {
-    background: #2563ff; color: #fff; border: none;
-    padding: 0.7rem 1.6rem; border-radius: 12px;
-    cursor: pointer; font-weight: 700; font-size: 0.9rem;
-    transition: all 0.2s; box-shadow: 0 4px 15px rgba(37,99,255,0.3);
-  }
-  .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
-  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .hidden { display: none !important; }
 
-  /* ===== POSTS ===== */
+  /* ── POST CARD ── */
   .post-card {
-    position: relative;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 24px;
-    margin-bottom: 2rem;
-    overflow: hidden;
-    transition: all 0.3s;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    position: relative; background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07); border-radius: 22px;
+    margin-bottom: 1.8rem; overflow: hidden; transition: all 0.3s;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   }
   .post-card::before {
-    content: '';
-    position: absolute; left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, #2563ff, #7c3aed);
-    border-radius: 4px 0 0 4px;
-    z-index: 1;
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg,#2563ff,#7c3aed); border-radius: 4px 0 0 4px; z-index: 1;
   }
-  .post-card:hover {
-    border-color: rgba(37,99,255,0.3);
-    transform: translateY(-4px);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+  .post-card:hover { border-color: rgba(37,99,255,0.25); transform: translateY(-3px); box-shadow: 0 14px 44px rgba(0,0,0,0.3); }
+
+  /* ── CRUD ESQUINA SUPERIOR DERECHA ── */
+  .post-crud {
+    position: absolute; top: 1rem; right: 1rem;
+    display: flex; gap: 0.4rem; z-index: 10;
   }
+  .btn-crud {
+    display: flex; align-items: center; gap: 0.3rem;
+    padding: 0.3rem 0.75rem; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; backdrop-filter: blur(8px); border: 1px solid transparent;
+  }
+  .btn-crud.btn-editar {
+    background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.3); color: #facc15;
+  }
+  .btn-crud.btn-editar:hover { background: rgba(234,179,8,0.28); color: #fde047; transform: translateY(-1px); }
+  .btn-crud.btn-eliminar {
+    background: rgba(239,68,68,0.13); border-color: rgba(239,68,68,0.28); color: #f87171;
+  }
+  .btn-crud.btn-eliminar:hover { background: rgba(239,68,68,0.26); color: #fca5a5; transform: translateY(-1px); }
+
   .post-media img { width: 100%; max-height: 420px; object-fit: cover; display: block; }
   .post-media video { width: 100%; max-height: 420px; display: block; }
-  .post-body { padding: 1.6rem 1.8rem 1.8rem 2.2rem; }
-  .post-cat-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .post-body { padding: 1.5rem 1.8rem 1.6rem 2.2rem; }
+  .post-cat-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
   .post-cat {
-    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-    background: rgba(37,99,255,0.15); color: #60a5fa;
-    padding: 0.28rem 0.85rem; border-radius: 999px;
-    border: 1px solid rgba(37,99,255,0.25);
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    background: rgba(37,99,255,0.14); color: #60a5fa;
+    padding: 0.25rem 0.8rem; border-radius: 999px; border: 1px solid rgba(37,99,255,0.22);
   }
-  .post-num { font-size: 0.72rem; color: rgba(255,255,255,0.2); font-weight: 500; }
-  .post-titulo {
-    font-size: 1.3rem; font-weight: 800; line-height: 1.3;
-    color: #fff; margin-bottom: 0.8rem; letter-spacing: -0.02em;
-  }
+  .post-num { font-size: 0.7rem; color: rgba(255,255,255,0.18); font-weight: 500; }
+  .post-titulo { font-size: 1.2rem; font-weight: 800; line-height: 1.35; color: #fff; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
   .post-contenido {
-    color: rgba(255,255,255,0.5); font-size: 0.93rem;
-    line-height: 1.8; margin-bottom: 1.4rem;
-    padding-left: 1rem;
-    border-left: 2px solid rgba(37,99,255,0.3);
+    color: rgba(255,255,255,0.45); font-size: 0.9rem; line-height: 1.8; margin-bottom: 1.3rem;
+    padding-left: 1rem; border-left: 2px solid rgba(37,99,255,0.28);
   }
   .post-footer {
     display: flex; align-items: center; justify-content: space-between;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    flex-wrap: wrap; gap: 0.8rem;
+    padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; gap: 0.8rem;
   }
-  .author-block { display: flex; align-items: center; gap: 0.8rem; }
+  .author-block { display: flex; align-items: center; gap: 0.75rem; }
   .author-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(135deg, #2563ff, #7c3aed);
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg,#2563ff,#7c3aed);
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; font-weight: 800; color: #fff;
-    box-shadow: 0 2px 10px rgba(37,99,255,0.35); flex-shrink: 0;
+    font-size: 0.82rem; font-weight: 800; color: #fff;
+    box-shadow: 0 2px 8px rgba(37,99,255,0.3); flex-shrink: 0;
   }
-  .author-info { display: flex; flex-direction: column; gap: 0.15rem; }
-  .author-name { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; }
-  .author-date { font-size: 0.72rem; color: rgba(255,255,255,0.3); }
+  .author-name { font-size: 0.85rem; font-weight: 700; color: #e2e8f0; }
+  .author-date { font-size: 0.7rem; color: rgba(255,255,255,0.28); }
 
-  /* ===== ACCIONES (likes / comentarios) ===== */
-  .post-actions {
-    display: flex; align-items: center; gap: 0.6rem;
-  }
-
+  /* ── BOTONES LIKE Y COMENTARIOS ── */
+  .post-actions { display: flex; align-items: center; gap: 0.5rem; }
   .btn-accion {
-    display: flex; align-items: center; gap: 6px;
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
-    font-size: 0.85rem; font-weight: 600;
-    cursor: pointer; transition: all 0.2s ease;
-    letter-spacing: 0.01em;
-    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.45rem 1rem; border-radius: 999px;
+    font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.22s;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.55);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
-  .btn-accion::after {
-    content: ''; position: absolute; inset: 0;
-    background: white; opacity: 0;
-    transition: opacity 0.15s; border-radius: inherit;
-  }
-  .btn-accion:hover::after { opacity: 0.06; }
+  .btn-accion:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
 
-  /* LIKE — normal */
-  .btn-like {
-    background: rgba(244,63,94,0.08);
-    border: 1.5px solid rgba(244,63,94,0.2);
-    color: rgba(251,113,133,0.75);
+  /* like activo */
+  .btn-accion.liked {
+    background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.45);
+    color: #f87171; box-shadow: 0 2px 12px rgba(239,68,68,0.2);
   }
-  .btn-like:hover {
-    background: rgba(244,63,94,0.14);
-    border-color: rgba(244,63,94,0.4);
-    color: #fb7185;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(244,63,94,0.2);
-  }
-  .btn-like .like-icon {
-    font-size: 1rem; display: inline-block;
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .btn-like:hover .like-icon { transform: scale(1.25); }
+  .btn-accion.liked:hover { background: rgba(239,68,68,0.28); }
 
-  /* LIKE — activo */
-  .btn-like.liked {
-    background: rgba(244,63,94,0.18);
-    border-color: rgba(244,63,94,0.55);
-    color: #f43f5e;
-    box-shadow: 0 0 0 3px rgba(244,63,94,0.1);
+  /* comentarios abiertos */
+  .btn-accion.comentado {
+    background: rgba(37,99,255,0.18); border-color: rgba(37,99,255,0.45);
+    color: #60a5fa; box-shadow: 0 2px 12px rgba(37,99,255,0.2);
   }
-  .btn-like.liked .like-icon {
-    animation: heartbeat 0.35s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes heartbeat {
-    0%   { transform: scale(1); }
-    40%  { transform: scale(1.4); }
-    100% { transform: scale(1); }
-  }
+  .btn-accion.comentado:hover { background: rgba(37,99,255,0.28); }
 
-  /* COMENTARIOS — normal */
-  .btn-comentarios {
-    background: rgba(99,102,241,0.08);
-    border: 1.5px solid rgba(99,102,241,0.2);
-    color: rgba(165,180,252,0.75);
-  }
-  .btn-comentarios:hover {
-    background: rgba(99,102,241,0.14);
-    border-color: rgba(99,102,241,0.4);
-    color: #a5b4fc;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(99,102,241,0.2);
-  }
-
-  /* COMENTARIOS — abierto */
-  .btn-comentarios.comentado {
-    background: rgba(99,102,241,0.18);
-    border-color: rgba(99,102,241,0.55);
-    color: #818cf8;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-  }
-
-  /* ===== SECCIÓN COMENTARIOS ===== */
+  /* ── SECCIÓN COMENTARIOS ── */
   .comentarios-section {
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(255,255,255,0.05);
     padding: 1.2rem 1.8rem 1.4rem 2.2rem;
-    display: flex; flex-direction: column; gap: 1rem;
+    display: flex; flex-direction: column; gap: 0.9rem;
     animation: fadeIn 0.2s ease;
   }
   .comentario-item {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px; padding: 0.85rem 1rem;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 0.8rem 1rem; transition: border-color 0.2s;
   }
-  .comentario-autor {
-    font-size: 0.8rem; font-weight: 700;
-    color: #93c5fd; margin-bottom: 0.35rem;
-  }
-  .comentario-texto {
-    font-size: 0.88rem; color: rgba(255,255,255,0.6); line-height: 1.6;
-  }
-  .comentarios-empty {
-    font-size: 0.85rem; color: rgba(255,255,255,0.25);
-    text-align: center; padding: 0.5rem 0;
-  }
+  .comentario-item:hover { border-color: rgba(255,255,255,0.13); }
+  .comentario-autor { font-size: 0.78rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.3rem; }
+  .comentario-texto { font-size: 0.87rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
+  .comentarios-empty { font-size: 0.82rem; color: rgba(255,255,255,0.2); text-align: center; padding: 0.4rem 0; }
 
-  /* form comentar */
-  .form-comentar {
-    display: flex; gap: 0.6rem; align-items: flex-end;
-  }
+  .form-comentar { display: flex; gap: 0.6rem; align-items: flex-end; }
   .form-comentar textarea {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px; padding: 0.7rem 0.9rem;
-    color: #fff; font-family: inherit; font-size: 0.88rem;
-    resize: none; outline: none; min-height: 42px; max-height: 120px;
-    transition: border-color 0.2s;
+    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 0.65rem 0.9rem; color: #fff;
+    font-family: inherit; font-size: 0.86rem; resize: none; outline: none;
+    min-height: 40px; max-height: 120px; transition: border-color 0.2s;
   }
   .form-comentar textarea:focus { border-color: rgba(37,99,255,0.5); }
-  .form-comentar textarea::placeholder { color: rgba(255,255,255,0.25); }
+  .form-comentar textarea::placeholder { color: rgba(255,255,255,0.22); }
   .form-comentar button {
-    background: #2563ff; color: #fff; border: none;
-    border-radius: 12px; padding: 0.7rem 1.1rem;
-    font-weight: 700; font-size: 0.85rem; cursor: pointer;
-    transition: all 0.2s; white-space: nowrap;
+    background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border: none;
+    border-radius: 12px; padding: 0.65rem 1.1rem; font-weight: 700; font-size: 0.83rem;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
-  .form-comentar button:hover { background: #1d4ed8; }
-  .form-comentar button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-comentar button:hover { opacity: 0.88; transform: translateY(-1px); }
+  .form-comentar button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
-  /* aviso login */
   .aviso-login {
     display: flex; align-items: center; gap: 0.5rem;
-    font-size: 0.85rem; color: rgba(255,255,255,0.35);
-    padding: 0.5rem 0;
+    background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 12px; padding: 0.7rem 1rem;
+    font-size: 0.84rem; color: rgba(255,255,255,0.45);
   }
   .aviso-login a { color: #60a5fa; font-weight: 700; text-decoration: underline; }
 
-  .loading { text-align: center; color: rgba(255,255,255,0.3); padding: 4rem; font-size: 0.95rem; }
+  .loading { text-align: center; color: rgba(255,255,255,0.25); padding: 4rem; font-size: 0.92rem; }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* ── EDIT MODAL IMAGES ── */
+  .edit-imgs-wrap { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .edit-img-item {
+    position: relative; width: 140px !important; height: 140px !important; flex-shrink: 0;
+    border-radius: 10px; overflow: hidden; background: #0d1117;
+    border: 1px solid rgba(255,255,255,0.1); display: inline-block;
   }
-</style>
+  .edit-img-item img, .edit-img-item video {
+    width: 90px !important; height: 90px !important;
+    object-fit: cover !important; display: block !important;
+    max-height: 90px !important;
+  }
+  .edit-img-remove {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(239,68,68,0.85); color: #fff; border: none;
+    border-radius: 50%; width: 20px; height: 20px; cursor: pointer;
+    font-size: 0.65rem; display: flex; align-items: center; justify-content: center;
+  }
+  .edit-upload-area {
+    border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px;
+    padding: 0.9rem; display: flex; align-items: center; gap: 0.6rem;
+    cursor: pointer; color: rgba(255,255,255,0.35); font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .edit-upload-area:hover { border-color: rgba(37,99,255,0.4); color: rgba(255,255,255,0.65); }
 
+  /* ── GALERÍA ── */
+  .post-gallery { display: grid !important; gap: 3px !important; cursor: pointer; width: 100% !important; }
+  .post-gallery.g1 { grid-template-columns: 1fr !important; }
+  .post-gallery.g2 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.g3 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.g3 .gal-item:first-child { grid-column: 1 / -1 !important; }
+  .post-gallery.g4 { grid-template-columns: 1fr 1fr !important; }
+  .post-gallery.gn { grid-template-columns: 1fr 1fr 1fr !important; }
+  .gal-item { position: relative !important; overflow: hidden !important; background: #000 !important; }
+  .gal-item img, .gal-item video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; transition: transform 0.3s; max-height: unset !important; }
+  .gal-item:hover img, .gal-item:hover video { transform: scale(1.04); }
+  .post-gallery.g1 .gal-item { height: auto !important; max-height: none !important; }
+  .post-gallery.g1 .gal-item img, .post-gallery.g1 .gal-item video { height: auto !important; max-height: none !important; object-fit: contain !important; background: #000 !important; }
+  .post-gallery.g2 .gal-item { height: 240px !important; }
+  .post-gallery.g3 .gal-item:first-child { height: 280px !important; }
+  .post-gallery.g3 .gal-item:not(:first-child) { height: 185px !important; }
+  .post-gallery.g4 .gal-item { height: 200px !important; }
+  .post-gallery.gn .gal-item { height: 170px !important; }
+  .gal-more {
+    position: absolute !important; inset: 0 !important; background: rgba(0,0,0,0.58) !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    color: #fff !important; font-size: 2rem !important; font-weight: 800 !important;
+  }
+
+  @keyframes fadeIn  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideUp { from { opacity:0; transform:translate(-50%,12px); } to { opacity:1; transform:translate(-50%,0); } }
+</style>
 
 <script>
   import { createClient } from '@supabase/supabase-js';
@@ -363,8 +434,19 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   var SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
   var SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   var supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
   var currentUser = null;
+  var editandoPostId = null;
+  var eliminandoPostId = null;
+  var archivosSeleccionados = [];
+
+  function toast(msg, tipo) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (tipo || '');
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(function() { el.style.display = 'none'; }, 3200);
+  }
 
   supabase.auth.getSession().then(function(result) {
     var session = result.data.session;
@@ -375,10 +457,9 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   function initPage() {
     var btnNuevo = document.getElementById('btn-nuevo');
     if (!currentUser) {
-      btnNuevo.textContent = '🔒 Inicia sesión para publicar';
-      btnNuevo.style.background = 'rgba(255,255,255,0.06)';
-      btnNuevo.style.border = '1px solid rgba(255,255,255,0.1)';
-      btnNuevo.addEventListener('click', function() { window.location.href = '/login'; });
+      btnNuevo.addEventListener('click', function() {
+        toast('Necesitas iniciar sesi\xF3n para publicar', 'warn');
+      });
     } else {
       btnNuevo.addEventListener('click', function() {
         document.getElementById('form-post').classList.toggle('hidden');
@@ -389,34 +470,102 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       document.getElementById('form-post').classList.add('hidden');
     });
     document.getElementById('btn-publicar').addEventListener('click', crearPost);
-
     document.getElementById('input-imagen').addEventListener('change', function(e) {
-      var files = Array.from(e.target.files);
-      archivosSeleccionados = archivosSeleccionados.concat(files);
+      archivosSeleccionados = archivosSeleccionados.concat(Array.from(e.target.files));
       renderPreviews();
       e.target.value = '';
+    });
+
+    /* Modal editar */
+    document.getElementById('modal-cerrar').addEventListener('click', cerrarModalEditar);
+    document.getElementById('modal-cancelar').addEventListener('click', cerrarModalEditar);
+    document.getElementById('modal-guardar').addEventListener('click', guardarEdicion);
+
+    /* Modal confirmar eliminar */
+    document.getElementById('confirm-cancelar').addEventListener('click', function() {
+      document.getElementById('modal-confirmar').style.display = 'none';
+      eliminandoPostId = null;
+    });
+    document.getElementById('confirm-ok').addEventListener('click', function() {
+      if (!eliminandoPostId) return;
+      var id = eliminandoPostId;
+      document.getElementById('modal-confirmar').style.display = 'none';
+      eliminandoPostId = null;
+      supabase.from('posts').delete().eq('id', id).then(function(result) {
+        if (result.error) { toast('Error al eliminar', 'error'); return; }
+        toast('Publicaci\xF3n eliminada', 'ok');
+        cargarPosts();
+      });
     });
 
     cargarPosts();
   }
 
-  var archivosSeleccionados = [];
+  function cerrarModalEditar() {
+    document.getElementById('modal-editar').style.display = 'none';
+    editandoPostId = null;
+  }
 
-  function renderPreviews() {
-    var preview = document.getElementById('preview-container');
-    var placeholder = document.getElementById('upload-placeholder');
+  var editImagenesActuales = [];
+  var editNuevosArchivos = [];
+
+  function abrirModalEditar(post) {
+    editandoPostId = post.id;
+    document.getElementById('edit-categoria').value = post.categoria;
+    document.getElementById('edit-titulo').value = post.titulo;
+    document.getElementById('edit-contenido').value = post.contenido;
+
+    // Cargar imágenes actuales
+    editImagenesActuales = post.imagen_url ? post.imagen_url.split(',').filter(function(u) { return u; }) : [];
+    editNuevosArchivos = [];
+    renderEditImagenes();
+    document.getElementById('edit-preview-container').innerHTML = '';
+    document.getElementById('edit-preview-container').classList.add('hidden');
+
+    document.getElementById('modal-editar').style.display = 'flex';
+  }
+
+  function renderEditImagenes() {
+    var wrap = document.getElementById('edit-imagenes-actuales');
+    wrap.innerHTML = '';
+    editImagenesActuales.forEach(function(url, i) {
+      var item = document.createElement('div');
+      item.className = 'edit-img-item';
+      var isVideo = url.match(/\.(mp4|webm|ogg)$/i);
+      var media;
+      if (isVideo) {
+        media = document.createElement('video');
+        media.src = url;
+        media.style.cssText = 'width:140px!important;height:140px!important;object-fit:cover!important;max-height:140px!important;display:block!important;';
+      } else {
+        media = document.createElement('img');
+        media.src = url;
+        media.alt = 'img';
+        media.style.cssText = 'width:140px!important;height:140px!important;object-fit:cover!important;max-height:140px!important;display:block!important;';
+      }
+      var rm = document.createElement('button');
+      rm.className = 'edit-img-remove'; rm.textContent = '✕';
+      rm.onclick = (function(idx) { return function() { editImagenesActuales.splice(idx, 1); renderEditImagenes(); }; })(i);
+      item.appendChild(media); item.appendChild(rm);
+      wrap.appendChild(item);
+    });
+  }
+
+  document.getElementById('edit-input-imagen') && document.getElementById('edit-input-imagen').addEventListener('change', function(e) {
+    editNuevosArchivos = editNuevosArchivos.concat(Array.from(e.target.files));
+    e.target.value = '';
+    renderEditPreview();
+    });
+
+  function renderEditPreview() {
+    var preview = document.getElementById('edit-preview-container');
     preview.innerHTML = '';
-    if (archivosSeleccionados.length === 0) {
-      preview.classList.add('hidden');
-      placeholder.classList.remove('hidden');
-      return;
-    }
-    placeholder.classList.add('hidden');
+    if (editNuevosArchivos.length === 0) { preview.classList.add('hidden'); return; }
     preview.classList.remove('hidden');
-    archivosSeleccionados.forEach(function(file, i) {
+    editNuevosArchivos.forEach(function(file, i) {
       var url = URL.createObjectURL(file);
       var item = document.createElement('div');
-      item.className = 'preview-item';
+      item.className = 'edit-img-item';
       var isVideo = file.type.startsWith('video/');
       var media;
       if (isVideo) {
@@ -427,168 +576,271 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         media.src = url;
         media.alt = 'preview';
       }
-      var removeBtn = document.createElement('button');
-      removeBtn.className = 'preview-remove';
-      removeBtn.textContent = '✕';
-      removeBtn.onclick = (function(idx) {
-        return function() { archivosSeleccionados.splice(idx, 1); renderPreviews(); };
-      })(i);
-      item.appendChild(media);
-      item.appendChild(removeBtn);
+      media.style.cssText = 'width:140px!important;height:140px!important;object-fit:cover!important;max-height:140px!important;display:block!important;';
+      var rm = document.createElement('button');
+      rm.className = 'edit-img-remove'; rm.textContent = '✕';
+      rm.onclick = (function(idx) { return function() { editNuevosArchivos.splice(idx, 1); renderEditPreview(); }; })(i);
+      item.appendChild(media); item.appendChild(rm);
       preview.appendChild(item);
     });
-    var addMore = document.createElement('div');
-    addMore.className = 'preview-add';
-    addMore.textContent = '+';
-    addMore.onclick = function() { document.getElementById('input-imagen').click(); };
-    preview.appendChild(addMore);
+  }
+
+  function confirmarEliminar(postId) {
+    eliminandoPostId = postId;
+    document.getElementById('modal-confirmar').style.display = 'flex';
+  }
+
+  function guardarEdicion() {
+    if (!editandoPostId) return;
+    var categoria = document.getElementById('edit-categoria').value;
+    var titulo    = document.getElementById('edit-titulo').value.trim();
+    var contenido = document.getElementById('edit-contenido').value.trim();
+    if (!titulo || !contenido) { toast('Completa todos los campos', 'warn'); return; }
+    var btn = document.getElementById('modal-guardar');
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+
+    // Subir nuevos archivos si hay
+    var uploadPromises = editNuevosArchivos.map(function(file) {
+      var ext = file.name.split('.').pop();
+      var fileName = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+      return supabase.storage.from('posts-media').upload(fileName, file, { contentType: file.type })
+        .then(function(result) {
+          if (!result.error) return supabase.storage.from('posts-media').getPublicUrl(fileName).data.publicUrl;
+          return null;
+        });
+    });
+
+    Promise.all(uploadPromises).then(function(nuevasUrls) {
+      var validNuevas = nuevasUrls.filter(function(u) { return u !== null; });
+      var todasUrls = editImagenesActuales.concat(validNuevas);
+      var imagen_url = todasUrls.length > 0 ? todasUrls.join(',') : null;
+
+      return supabase.from('posts').update({ categoria: categoria, titulo: titulo, contenido: contenido, imagen_url: imagen_url }).eq('id', editandoPostId);
+    }).then(function(result) {
+      btn.textContent = 'Guardar'; btn.disabled = false;
+      if (result && result.error) { toast('Error al guardar', 'error'); return; }
+      cerrarModalEditar();
+      toast('Publicaci\xF3n actualizada', 'ok');
+      cargarPosts();
+    });
+  }
+
+  function renderPreviews() {
+    var preview     = document.getElementById('preview-container');
+    var placeholder = document.getElementById('upload-placeholder');
+    preview.innerHTML = '';
+    if (archivosSeleccionados.length === 0) {
+      preview.classList.add('hidden'); placeholder.classList.remove('hidden'); return;
+    }
+    placeholder.classList.add('hidden'); preview.classList.remove('hidden');
+    archivosSeleccionados.forEach(function(file, i) {
+      var url  = URL.createObjectURL(file);
+      var item = document.createElement('div');
+      item.className = 'preview-item';
+      var isVideo = file.type.startsWith('video/');
+      var media;
+      if (isVideo) { media = document.createElement('video'); media.src = url; }
+      else         { media = document.createElement('img');   media.src = url; media.alt = 'preview'; }
+      var rm = document.createElement('button');
+      rm.className = 'preview-remove'; rm.textContent = '\u2715';
+      rm.onclick = (function(idx) { return function() { archivosSeleccionados.splice(idx,1); renderPreviews(); }; })(i);
+      item.appendChild(media); item.appendChild(rm); preview.appendChild(item);
+    });
+    var add = document.createElement('div');
+    add.className = 'preview-add'; add.textContent = '+';
+    add.onclick = function() { document.getElementById('input-imagen').click(); };
+    preview.appendChild(add);
   }
 
   function renderMedia(imagen_url) {
     if (!imagen_url) return '';
-    var items = imagen_url.split(',').map(function(url) {
-      if (url.match(/\.(mp4|webm|ogg)$/i)) {
-        return '<video controls style="width:100%;max-height:400px;object-fit:contain;background:#000"><source src="' + url + '" /></video>';
+    var urls = imagen_url.split(',').filter(function(u) { return u.trim(); });
+    if (urls.length === 0) return '';
+
+    var n = urls.length;
+    var cls = n === 1 ? 'g1' : n === 2 ? 'g2' : n === 3 ? 'g3' : n === 4 ? 'g4' : 'gn';
+    var shown = n > 5 ? 5 : n;
+    var html = '<div class="post-gallery ' + cls + '">';
+
+    for (var i = 0; i < shown; i++) {
+      var url = urls[i].trim();
+      var isVideo = url.match(/\.(mp4|webm|ogg)$/i);
+      var isLast = (i === shown - 1 && n > shown);
+      var dataUrl = url.replace(/"/g, '&quot;');
+      var dataType = isVideo ? 'video' : 'img';
+
+      html += '<div class="gal-item" data-url="' + dataUrl + '" data-type="' + dataType + '" onclick="openLightbox(this)">';
+      if (isVideo) {
+        html += '<video src="' + dataUrl + '" muted playsinline></video>';
+      } else {
+        html += '<img src="' + dataUrl + '" alt="foto" />';
       }
-      return '<img src="' + url + '" alt="imagen" style="width:100%;max-height:500px;object-fit:contain;background:#000;cursor:pointer" />';
-    });
-    return '<div class="post-media">' + items.join('') + '</div>';
+      if (isLast) {
+        html += '<div class="gal-more">+' + (n - shown + 1) + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
   }
 
-  function renderComentariosList(lista_com) {
-    if (lista_com.length === 0) {
-      return '<p class="comentarios-empty">Aún no hay comentarios</p>';
+  window.openLightbox = function(el) {
+    var url  = el.dataset.url;
+    var type = el.dataset.type;
+    var lb   = document.getElementById('lightbox');
+    var img  = document.getElementById('lightbox-img');
+    var vid  = document.getElementById('lightbox-vid');
+    if (type === 'video') {
+      img.style.display = 'none';
+      vid.style.display = 'block';
+      vid.src = url;
+      vid.play();
+    } else {
+      vid.pause ? vid.pause() : null;
+      vid.style.display = 'none';
+      img.style.display = 'block';
+      img.src = url;
     }
-    return lista_com.map(function(c) {
+    lb.style.display = 'flex';
+    if (event) event.stopPropagation();
+  };
+
+  window.closeLightbox = function() {
+    var lb  = document.getElementById('lightbox');
+    var vid = document.getElementById('lightbox-vid');
+    vid.pause();
+    lb.style.display = 'none';
+  };
+
+  document.getElementById('lightbox').addEventListener('click', function(e) {
+    if (e.target === this) closeLightbox();
+  });
+
+  function renderComentarios(lista) {
+    if (lista.length === 0) return '<p class="comentarios-empty">Sin comentarios aún</p>';
+    return lista.map(function(c) {
       return '<div class="comentario-item"><div class="comentario-autor">' + (c.autor_nombre || 'Usuario') + '</div><div class="comentario-texto">' + c.texto + '</div></div>';
     }).join('');
   }
 
   function renderFormComentario(user) {
-    if (user) {
+    if (user)
       return '<div class="form-comentar"><textarea placeholder="Escribe un comentario..." rows="1"></textarea><button class="btn-enviar-com">Comentar</button></div>';
-    }
-    return '<div class="aviso-login">🔒 <span><a href="/login">Inicia sesi\xF3n</a> para comentar.</span></div>';
+    return '<div class="aviso-login">\uD83D\uDD12 <span><a href="/login">Inicia sesi\xF3n</a> para comentar.</span></div>';
   }
 
   function cargarPosts() {
     var lista = document.getElementById('posts-lista');
     lista.innerHTML = '<p class="loading">Cargando posts...</p>';
-
     fetch(SUPABASE_URL + '/rest/v1/posts?order=created_at.desc', {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
     })
     .then(function(res) { return res.json(); })
     .then(function(posts) {
-      if (!posts.length) {
-        lista.innerHTML = '<p class="loading">No hay publicaciones aún. ¡Sé el primero!</p>';
-        return;
-      }
+      if (!posts || !posts.length) { lista.innerHTML = '<p class="loading">No hay publicaciones aún.</p>'; return; }
       lista.innerHTML = '';
-      var index = 0;
-
       function cargarPost(i) {
         if (i >= posts.length) return;
         var p = posts[i];
-
         Promise.all([
           supabase.from('likes').select('*').eq('post_id', p.id),
           supabase.from('comentarios').select('id, autor_nombre, texto, created_at').eq('post_id', p.id).order('created_at', { ascending: true })
         ]).then(function(results) {
-          var likesData = results[0].data || [];
-          var comentariosData = results[1].data || [];
+          var likesData      = results[0].data || [];
+          var comentariosData= results[1].data || [];
           var totalLikes = likesData.length;
           var yaLiked = currentUser ? likesData.some(function(l) { return l.user_id === currentUser.id; }) : false;
+          var nombreSesion   = currentUser ? ((currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0]) : '';
+          var esAutor = currentUser && (p.user_id === currentUser.id || p.autor === nombreSesion);
 
           var likeClass = yaLiked ? 'btn-accion btn-like liked' : 'btn-accion btn-like';
-          var likeIcon = yaLiked ? '❤️' : '🤍';
+          var likeIcon  = yaLiked ? '\u2764\uFE0F' : '\uD83E\uDD0D';
           var fecha = new Date(p.created_at).toLocaleDateString('es-SV', {day:'numeric', month:'short', year:'numeric'});
-          var num = String(i + 1);
-          while (num.length < 2) num = '0' + num;
+          var num = String(i + 1); while (num.length < 2) num = '0' + num;
+
+          var crudBtns = esAutor
+            ? '<div class="post-crud">' +
+                '<button class="btn-crud btn-editar">\u270F\uFE0F Editar</button>' +
+                '<button class="btn-crud btn-eliminar">\uD83D\uDDD1\uFE0F</button>' +
+              '</div>'
+            : '';
 
           var card = document.createElement('div');
           card.className = 'post-card';
           card.dataset.postId = p.id;
-
           card.innerHTML =
+            crudBtns +
             renderMedia(p.imagen_url) +
             '<div class="post-body">' +
-              '<div class="post-cat-row">' +
-                '<span class="post-cat">' + p.categoria + '</span>' +
-                '<span class="post-num">#' + num + '</span>' +
-              '</div>' +
+              '<div class="post-cat-row"><span class="post-cat">' + p.categoria + '</span><span class="post-num">#' + num + '</span></div>' +
               '<div class="post-titulo">' + p.titulo + '</div>' +
               '<div class="post-contenido">' + p.contenido + '</div>' +
               '<div class="post-footer">' +
                 '<div class="author-block">' +
                   '<div class="author-avatar">' + p.autor.charAt(0).toUpperCase() + '</div>' +
-                  '<div class="author-info">' +
-                    '<span class="author-name">' + p.autor + '</span>' +
-                    '<span class="author-date">' + fecha + '</span>' +
-                  '</div>' +
+                  '<div><div class="author-name">' + p.autor + '</div><div class="author-date">' + fecha + '</div></div>' +
                 '</div>' +
                 '<div class="post-actions">' +
                   '<button class="' + likeClass + '" data-post="' + p.id + '" data-liked="' + yaLiked + '">' +
-                    '<span class="like-icon">' + likeIcon + '</span>' +
-                    '<span class="like-count">' + totalLikes + '</span>' +
+                    '<span class="like-icon">' + likeIcon + '</span><span class="like-count">' + totalLikes + '</span>' +
                   '</button>' +
                   '<button class="btn-accion btn-comentarios" data-post="' + p.id + '">' +
-                    '<span>💬</span>' +
-                    '<span class="com-count">' + comentariosData.length + '</span>' +
+                    '<span>\uD83D\uDCAC</span><span class="com-count">' + comentariosData.length + '</span>' +
                   '</button>' +
                 '</div>' +
               '</div>' +
             '</div>' +
-            '<div class="comentarios-section" style="display:none;" data-post="' + p.id + '">' +
-              '<div class="comentarios-lista">' + renderComentariosList(comentariosData) + '</div>' +
+            '<div class="comentarios-section" style="display:none;">' +
+              '<div class="comentarios-lista">' + renderComentarios(comentariosData) + '</div>' +
               renderFormComentario(currentUser) +
             '</div>';
 
           lista.appendChild(card);
-          iniciarAcciones(card, p.id, currentUser);
+          iniciarAcciones(card, p, currentUser);
           cargarPost(i + 1);
         });
       }
-
       cargarPost(0);
     })
     .catch(function(e) {
       console.error(e);
-      lista.innerHTML = '<p class="loading">Error al cargar posts.</p>';
+      document.getElementById('posts-lista').innerHTML = '<p class="loading">Error al cargar posts.</p>';
     });
   }
 
-  function iniciarAcciones(card, postId, user) {
+  function iniciarAcciones(card, post, user) {
+    var btnEdit = card.querySelector('.btn-editar');
+    if (btnEdit) btnEdit.addEventListener('click', function() { abrirModalEditar(post); });
+
+    var btnDel = card.querySelector('.btn-eliminar');
+    if (btnDel) btnDel.addEventListener('click', function() { confirmarEliminar(post.id); });
+
     var btnLike = card.querySelector('.btn-like');
     btnLike.addEventListener('click', function() {
-      if (!user) { window.location.href = '/login'; return; }
+      if (!user) { toast('\uD83D\uDD12 Necesitas iniciar sesi\xF3n para dar like', 'warn'); return; }
       if (btnLike.dataset.loading === 'true') return;
       btnLike.dataset.loading = 'true';
-
       var yaLiked = btnLike.dataset.liked === 'true';
       var countEl = btnLike.querySelector('.like-count');
-      var iconEl = btnLike.querySelector('.like-icon');
-
+      var iconEl  = btnLike.querySelector('.like-icon');
       if (yaLiked) {
-        supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id).then(function() {
-          btnLike.dataset.liked = 'false';
-          btnLike.classList.remove('liked');
-          iconEl.textContent = '🤍';
+        supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', user.id).then(function() {
+          btnLike.dataset.liked = 'false'; btnLike.classList.remove('liked');
+          iconEl.textContent = '\uD83E\uDD0D';
           countEl.textContent = String(Number(countEl.textContent) - 1);
           btnLike.dataset.loading = 'false';
         });
       } else {
-        supabase.from('likes').insert({ post_id: postId, user_id: user.id }).then(function() {
-          btnLike.dataset.liked = 'true';
-          btnLike.classList.add('liked');
-          iconEl.textContent = '❤️';
+        supabase.from('likes').insert({ post_id: post.id, user_id: user.id }).then(function() {
+          btnLike.dataset.liked = 'true'; btnLike.classList.add('liked');
+          iconEl.textContent = '\u2764\uFE0F';
           countEl.textContent = String(Number(countEl.textContent) + 1);
           btnLike.dataset.loading = 'false';
         });
       }
     });
 
-    var btnCom = card.querySelector('.btn-comentarios');
+    var btnCom  = card.querySelector('.btn-comentarios');
     var seccion = card.querySelector('.comentarios-section');
     btnCom.addEventListener('click', function() {
       var abierto = seccion.style.display !== 'none';
@@ -598,25 +850,19 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
     var formCom = card.querySelector('.form-comentar');
     if (!formCom || !user) return;
-
-    var textarea = formCom.querySelector('textarea');
+    var textarea  = formCom.querySelector('textarea');
     var btnEnviar = formCom.querySelector('.btn-enviar-com');
-    var listaEl = card.querySelector('.comentarios-lista');
-    var comCount = card.querySelector('.com-count');
+    var listaEl   = card.querySelector('.comentarios-lista');
+    var comCount  = card.querySelector('.com-count');
 
     btnEnviar.addEventListener('click', function() {
       var texto = textarea.value.trim();
       if (!texto) return;
-      btnEnviar.disabled = true;
-      btnEnviar.textContent = 'Enviando...';
-
+      btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...';
       var nombreAutor = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name : user.email.split('@')[0];
-
-      supabase.from('comentarios')
-        .insert({ post_id: postId, user_id: user.id, autor_nombre: nombreAutor, texto: texto })
-        .select()
+      supabase.from('comentarios').insert({ post_id: post.id, user_id: user.id, autor_nombre: nombreAutor, texto: texto }).select()
         .then(function(result) {
-          if (result.error) throw result.error;
+          if (result.error) { toast('Error al comentar', 'error'); return; }
           var data = result.data[0];
           var empty = listaEl.querySelector('.comentarios-empty');
           if (empty) empty.remove();
@@ -625,56 +871,43 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           item.innerHTML = '<div class="comentario-autor">' + nombreAutor + '</div><div class="comentario-texto">' + data.texto + '</div>';
           listaEl.prepend(item);
           comCount.textContent = String(Number(comCount.textContent) + 1);
-          textarea.value = '';
-          btnEnviar.disabled = false;
-          btnEnviar.textContent = 'Comentar';
+          textarea.value = ''; btnEnviar.disabled = false; btnEnviar.textContent = 'Comentar';
+          toast('Comentario publicado', 'ok');
         })
-        .catch(function(e) {
-          console.error(e);
-          alert('Error al enviar el comentario');
-          btnEnviar.disabled = false;
-          btnEnviar.textContent = 'Comentar';
-        });
+        .catch(function() { toast('Error al comentar', 'error'); btnEnviar.disabled = false; btnEnviar.textContent = 'Comentar'; });
     });
   }
 
   function crearPost() {
-    if (!currentUser) { window.location.href = '/login'; return; }
-    var autor = (currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0];
-    var titulo = document.getElementById('input-titulo').value.trim();
+    if (!currentUser) { toast('\uD83D\uDD12 Necesitas iniciar sesi\xF3n para publicar', 'warn'); return; }
+    var autor     = (currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email.split('@')[0];
+    var titulo    = document.getElementById('input-titulo').value.trim();
     var categoria = document.getElementById('input-categoria').value;
     var contenido = document.getElementById('input-contenido').value.trim();
-    if (!titulo || !contenido) { alert('Completa todos los campos'); return; }
-
+    if (!titulo || !contenido) { toast('Completa todos los campos', 'warn'); return; }
     var btn = document.getElementById('btn-publicar');
-    btn.textContent = 'Subiendo...';
-    btn.disabled = true;
-
+    btn.textContent = 'Subiendo...'; btn.disabled = true;
     var uploadPromises = archivosSeleccionados.map(function(file) {
       var ext = file.name.split('.').pop();
       var fileName = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
       return supabase.storage.from('posts-media').upload(fileName, file, { contentType: file.type })
         .then(function(result) {
-          if (!result.error) {
-            return supabase.storage.from('posts-media').getPublicUrl(fileName).data.publicUrl;
-          }
+          if (!result.error) return supabase.storage.from('posts-media').getPublicUrl(fileName).data.publicUrl;
           return null;
         });
     });
-
     Promise.all(uploadPromises).then(function(urls) {
-      var validUrls = urls.filter(function(u) { return u !== null; });
+      var validUrls  = urls.filter(function(u) { return u !== null; });
       var imagen_url = validUrls.length > 0 ? validUrls.join(',') : null;
-
       return supabase.from('posts').insert({ autor: autor, titulo: titulo, categoria: categoria, contenido: contenido, imagen_url: imagen_url });
     }).then(function() {
-      btn.textContent = '🚀 Publicar';
-      btn.disabled = false;
+      btn.textContent = 'Publicar'; btn.disabled = false;
       archivosSeleccionados = [];
       document.getElementById('form-post').classList.add('hidden');
       document.getElementById('input-titulo').value = '';
       document.getElementById('input-contenido').value = '';
       renderPreviews();
+      toast('Publicaci\xF3n creada', 'ok');
       cargarPosts();
     });
   }
