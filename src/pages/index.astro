@@ -6,12 +6,21 @@ import Layout from '../layouts/Layout.astro';
 
   <section class="hero">
     <div class="hero-content">
-      <span class="badge">Plataforma Universitaria</span>
-      <h1>Bienvenido a <span>UniSpace</span> ULS</h1>
-      <p>Tu espacio digital universitario — foro, mapa del campus, podcasts y asistente IA en un solo lugar.</p>
-      <div class="hero-btns">
-        <a href="/foro" class="btn-primary">Ir al Foro</a>
-        <a href="/mapa" class="btn-secondary">Ver Mapa</a>
+      <div class="hero-text">
+        <span class="badge">Plataforma Universitaria</span>
+        <h1>Bienvenido a <span>UniSpace</span> ULS</h1>
+        <p>Tu espacio digital universitario — foro, mapa del campus, podcasts y asistente IA en un solo lugar.</p>
+        <div class="hero-btns">
+          <a href="/foro" class="btn-primary">Ir al Foro</a>
+          <a href="/mapa" class="btn-secondary">Ver Mapa</a>
+        </div>
+      </div>
+      <div class="hero-img-wrap">
+        <img
+          src="https://static.vecteezy.com/system/resources/thumbnails/055/835/082/small/smiling-student-girl-holding-book-and-backpack-isolated-on-transparent-background-png.png"
+          alt="Estudiante ULS"
+          class="hero-img"
+        />
       </div>
     </div>
   </section>
@@ -38,16 +47,31 @@ import Layout from '../layouts/Layout.astro';
 
 <style>
   .hero {
-    min-height: 90vh;
+    min-height: 88vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 2rem;
-    background: radial-gradient(ellipse at 50% 40%, rgba(37,99,255,0.15) 0%, transparent 70%);
+    padding: 2rem 3rem;
+    background: radial-gradient(ellipse at 60% 40%, rgba(37,99,255,0.13) 0%, transparent 65%);
   }
 
-  .hero-content { max-width: 700px; }
+  .hero-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  /* ── TEXTO ── */
+  .hero-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
 
   .badge {
     display: inline-block;
@@ -59,55 +83,81 @@ import Layout from '../layouts/Layout.astro';
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.05em;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.4rem;
   }
 
   h1 {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 700;
+    font-size: clamp(2.2rem, 4.5vw, 4rem);
+    font-weight: 800;
     line-height: 1.1;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.03em;
   }
-
   h1 span { color: #2563ff; }
 
-  .hero-content p {
-    color: rgba(255,255,255,0.55);
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
-    line-height: 1.7;
+  .hero-text p {
+    color: rgba(255,255,255,0.5);
+    font-size: 1.05rem;
+    margin-bottom: 2.2rem;
+    line-height: 1.75;
+    max-width: 480px;
   }
 
-  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
 
   .btn-primary {
-    background: #2563ff;
-    color: #fff;
-    padding: 0.85rem 2rem;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background 0.2s;
+    background: linear-gradient(135deg, #2563ff, #7c3aed);
+    color: #fff; padding: 0.85rem 2rem;
+    border-radius: 12px; text-decoration: none;
+    font-weight: 700; transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(37,99,255,0.35);
   }
-  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
 
   .btn-secondary {
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-    padding: 0.85rem 2rem;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06); color: #fff;
+    padding: 0.85rem 2rem; border-radius: 12px;
+    text-decoration: none; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.12);
     transition: background 0.2s;
   }
-  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.11); }
 
+  /* ── IMAGEN ── */
+  .hero-img-wrap {
+    flex-shrink: 0;
+    width: 650px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+  }
+  .hero-img-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    background: linear-gradient(to top, #080c14 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .hero-img {
+    width: 100%;
+    max-width: 650px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 20px 48px rgba(37,99,255,0.2));
+  }
+
+  /* ── FEATURES ── */
   .features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1.5rem;
-    padding: 4rem 3rem;
+    padding: 2rem 3rem 5rem;
     max-width: 1100px;
     margin: 0 auto;
   }
@@ -115,14 +165,24 @@ import Layout from '../layouts/Layout.astro';
   .card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 2rem;
-    text-decoration: none;
-    color: #fff;
+    border-radius: 20px; padding: 2rem;
+    text-decoration: none; color: #fff;
     transition: transform 0.2s, border-color 0.2s;
   }
   .card:hover { transform: translateY(-4px); border-color: rgba(37,99,255,0.4); }
 
   .icon { font-size: 2.5rem; margin-bottom: 1rem; }
   .card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-  .card p { color: rgba(255,255
+  .card p { color: rgba(255,255,255,0.45); font-size: 0.9rem; line-height: 1.6; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero { padding: 3rem 1.5rem; min-height: auto; }
+    .hero-content { flex-direction: column-reverse; text-align: center; gap: 1.5rem; }
+    .hero-text { align-items: center; }
+    .hero-text p { max-width: 100%; }
+    .hero-btns { justify-content: center; }
+    .hero-img-wrap { width: 320px; }
+    .features { padding: 2rem 1.5rem 4rem; }
+  }
+</style>

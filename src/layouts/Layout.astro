@@ -23,6 +23,7 @@ const { title = "UniSpace ULS" } = Astro.props;
       <div id="nav-user" class="nav-user hidden">
         <div class="user-avatar" id="user-avatar">U</div>
         <span id="user-name">Usuario</span>
+        <span id="user-rol" class="user-rol hidden"></span>
         <button id="btn-logout" class="btn-logout">Salir</button>
       </div>
       <a href="/login" id="nav-login" class="btn-nav-login">Iniciar sesión</a>
@@ -121,6 +122,18 @@ const { title = "UniSpace ULS" } = Astro.props;
     max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .user-rol {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f87171;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.4);
+    padding: 0.14rem 0.55rem;
+    border-radius: 100px;
     white-space: nowrap;
   }
   .btn-logout {
@@ -471,6 +484,7 @@ const { title = "UniSpace ULS" } = Astro.props;
     const navLogin = document.getElementById('nav-login');
     const userName = document.getElementById('user-name');
     const userAvatar = document.getElementById('user-avatar');
+    const userRol = document.getElementById('user-rol');
 
     if (session) {
       navUser.classList.remove('hidden');
@@ -478,6 +492,16 @@ const { title = "UniSpace ULS" } = Astro.props;
       const name = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
       userName.textContent = name;
       userAvatar.textContent = name.charAt(0).toUpperCase();
+
+      // Mostrar el rol del usuario (en rojo)
+      const { data: perfil } = await supabase
+        .from('perfiles').select('rol').eq('id', session.user.id).single();
+      if (perfil && perfil.rol) {
+        userRol.textContent = perfil.rol;
+        userRol.classList.remove('hidden');
+      } else {
+        userRol.classList.add('hidden');
+      }
     } else {
       navUser.classList.add('hidden');
       navLogin.classList.remove('hidden');

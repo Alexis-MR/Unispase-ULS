@@ -340,6 +340,7 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     flex-direction: column;
     flex: 1;
   }
+  .card-link { text-decoration: none; color: inherit; cursor: pointer; }
 
   /* Categoría + fecha */
   .card-meta-top {
@@ -576,7 +577,7 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       lista.innerHTML = podcasts.map((p, i) => `
         <div class="podcast-card" style="animation-delay:${i * 0.07}s">
           <div class="card-media">${renderMedia(p.url_audio)}</div>
-          <div class="card-body">
+          <a class="card-body card-link" href="/podcast/${p.id}">
 
             <div class="card-meta-top">
               <span class="cat-pill">${p.categoria}</span>
@@ -595,7 +596,7 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
               </div>
             </div>
 
-          </div>
+          </a>
         </div>
       `).join('');
 

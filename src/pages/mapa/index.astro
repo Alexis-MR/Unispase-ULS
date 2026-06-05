@@ -5,32 +5,47 @@ import Layout from '../../layouts/Layout.astro';
 <Layout title="Mapa — UniSpace ULS">
   <div class="mapa-container">
     <div class="mapa-header">
-      <h1>Mapa del Campus</h1>
-      <p>Encuentra aulas, laboratorios y espacios de la universidad</p>
+      <div>
+        <h1>Mapa del Campus</h1>
+        <p>Encuentra aulas, laboratorios y espacios de la universidad</p>
+      </div>
+      <button id="btn-ubicacion" class="btn-ubicacion">
+        📍 ¿Dónde estoy?
+      </button>
     </div>
+
+    <div id="banner-ubicacion" class="banner hidden"></div>
 
     <div class="mapa-wrapper">
       <div class="lugares-lista">
         <h3>Lugares</h3>
-        <div class="lugar-item activo" data-lat="13.9094" data-lng="-89.5599" data-nombre="Edificio Principal">
+        <div class="lugar-item activo" data-lat="13.9094" data-lng="-89.5599" data-nombre="Edificio Principal" data-icono="🏛️">
           🏛️ Edificio Principal
         </div>
-        <div class="lugar-item" data-lat="13.9090" data-lng="-89.5595" data-nombre="Biblioteca">
+        <div class="lugar-item" data-lat="13.9090" data-lng="-89.5595" data-nombre="Biblioteca" data-icono="📚">
           📚 Biblioteca
         </div>
-        <div class="lugar-item" data-lat="13.9098" data-lng="-89.5603" data-nombre="Laboratorio de Cómputo">
+        <div class="lugar-item" data-lat="13.9098" data-lng="-89.5603" data-nombre="Laboratorio de Cómputo" data-icono="💻">
           💻 Laboratorio de Cómputo
         </div>
-        <div class="lugar-item" data-lat="13.9086" data-lng="-89.5590" data-nombre="Cafetería">
+        <div class="lugar-item" data-lat="13.9086" data-lng="-89.5590" data-nombre="Cafetería" data-icono="🍽️">
           🍽️ Cafetería
         </div>
-        <div class="lugar-item" data-lat="13.9102" data-lng="-89.5608" data-nombre="Cancha Deportiva">
+        <div class="lugar-item" data-lat="13.9102" data-lng="-89.5608" data-nombre="Cancha Deportiva" data-icono="⚽">
           ⚽ Cancha Deportiva
         </div>
-        <div class="lugar-item" data-lat="13.9088" data-lng="-89.5601" data-nombre="Auditorio">
+        <div class="lugar-item" data-lat="13.9088" data-lng="-89.5601" data-nombre="Auditorio" data-icono="🎭">
           🎭 Auditorio
         </div>
+
+        <!-- Info ruta -->
+        <div id="info-ruta" class="info-ruta hidden">
+          <div class="ruta-titulo">📐 Ruta al destino</div>
+          <div id="ruta-distancia" class="ruta-dato"></div>
+          <button id="btn-limpiar-ruta" class="btn-limpiar">✕ Limpiar ruta</button>
+        </div>
       </div>
+
       <div id="map"></div>
     </div>
   </div>
@@ -40,66 +55,265 @@ import Layout from '../../layouts/Layout.astro';
 
 <style>
   .mapa-container { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
-  .mapa-header { margin-bottom: 2rem; }
-  .mapa-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .mapa-header p { color: rgba(255,255,255,0.5); font-size: 0.95rem; }
 
-  .mapa-wrapper { display: grid; grid-template-columns: 240px 1fr; gap: 1.5rem; }
+  .mapa-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .mapa-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .mapa-header p  { color: rgba(255,255,255,0.45); font-size: 0.92rem; }
+
+  .btn-ubicacion {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: linear-gradient(135deg, #2563ff, #7c3aed);
+    color: #fff; border: none; padding: 0.75rem 1.4rem;
+    border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(37,99,255,0.35);
+    white-space: nowrap;
+  }
+  .btn-ubicacion:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-ubicacion:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* banner estado */
+  .banner {
+    padding: 0.75rem 1.2rem; border-radius: 12px;
+    font-size: 0.88rem; font-weight: 600;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .banner.info    { background: rgba(37,99,255,0.12);  border: 1px solid rgba(37,99,255,0.3);  color: #60a5fa; }
+  .banner.ok      { background: rgba(34,197,94,0.1);   border: 1px solid rgba(34,197,94,0.3);  color: #4ade80; }
+  .banner.warn    { background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+  .banner.error   { background: rgba(239,68,68,0.1);   border: 1px solid rgba(239,68,68,0.3);  color: #f87171; }
+  .hidden { display: none !important; }
+
+  /* layout mapa */
+  .mapa-wrapper {
+    display: grid; grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+  }
 
   .lugares-lista {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px; padding: 1.2rem;
-    display: flex; flex-direction: column; gap: 0.5rem;
+    display: flex; flex-direction: column; gap: 0.4rem;
   }
-  .lugares-lista h3 { font-size: 0.85rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+  .lugares-lista h3 {
+    font-size: 0.75rem; color: rgba(255,255,255,0.35);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+  }
 
   .lugar-item {
     padding: 0.75rem 1rem; border-radius: 10px;
-    cursor: pointer; font-size: 0.9rem;
+    cursor: pointer; font-size: 0.88rem;
     color: rgba(255,255,255,0.6);
-    transition: all 0.2s;
-    border: 1px solid transparent;
+    transition: all 0.2s; border: 1px solid transparent;
   }
-  .lugar-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .lugar-item:hover  { background: rgba(255,255,255,0.07); color: #fff; }
   .lugar-item.activo { background: rgba(37,99,255,0.15); color: #60a5fa; border-color: rgba(37,99,255,0.3); }
 
-  #map { height: 500px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
+  /* info ruta */
+  .info-ruta {
+    margin-top: 1rem; padding: 1rem;
+    background: rgba(37,99,255,0.08);
+    border: 1px solid rgba(37,99,255,0.2);
+    border-radius: 12px;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .ruta-titulo { font-size: 0.78rem; font-weight: 700; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ruta-dato   { font-size: 0.88rem; color: rgba(255,255,255,0.7); }
+  .btn-limpiar {
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25);
+    color: #f87171; border-radius: 8px; padding: 0.4rem 0.8rem;
+    font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    align-self: flex-start; margin-top: 0.2rem;
+  }
+  .btn-limpiar:hover { background: rgba(239,68,68,0.22); }
+
+  #map {
+    height: 540px; border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08); overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    .mapa-wrapper { grid-template-columns: 1fr; }
+    #map { height: 380px; }
+  }
 </style>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  window.addEventListener('load', () => {
-    const map = L.map('map').setView([13.9094, -89.5599], 17);
+  window.addEventListener('load', function() {
+
+    // ── MAPA ──
+    var map = L.map('map').setView([13.9094, -89.5599], 17);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    const iconoPersonalizado = L.divIcon({
-      html: '📍',
-      className: 'icono-mapa',
-      iconSize: [30, 30],
-      iconAnchor: [15, 30]
-    });
+    // ── MARCADORES LUGARES ──
+    var marcadores = [];
+    var lugarActivo = null;
+    var rutas = [];
+    var miUbicacion = null;
+    var miMarcador = null;
+    var miCirculo = null;
 
-    const lugares = document.querySelectorAll('.lugar-item');
+    function iconoLugar(emoji) {
+      return L.divIcon({
+        html: '<div style="font-size:1.6rem;line-height:1;">' + emoji + '</div>',
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+    }
 
-    lugares.forEach(lugar => {
-      const lat = parseFloat(lugar.dataset.lat);
-      const lng = parseFloat(lugar.dataset.lng);
-      const nombre = lugar.dataset.nombre;
+    var lugares = document.querySelectorAll('.lugar-item');
 
-      const marcador = L.marker([lat, lng], { icon: iconoPersonalizado })
+    lugares.forEach(function(lugar) {
+      var lat    = parseFloat(lugar.dataset.lat);
+      var lng    = parseFloat(lugar.dataset.lng);
+      var nombre = lugar.dataset.nombre;
+      var icono  = lugar.dataset.icono || '📍';
+
+      var marcador = L.marker([lat, lng], { icon: iconoLugar(icono) })
         .addTo(map)
-        .bindPopup(`<b>${nombre}</b>`);
+        .bindPopup('<b>' + nombre + '</b>');
 
-      lugar.addEventListener('click', () => {
-        lugares.forEach(l => l.classList.remove('activo'));
+      marcadores.push({ el: lugar, marcador: marcador, lat: lat, lng: lng, nombre: nombre });
+
+      lugar.addEventListener('click', function() {
+        lugares.forEach(function(l) { l.classList.remove('activo'); });
         lugar.classList.add('activo');
+        lugarActivo = { lat: lat, lng: lng, nombre: nombre };
         map.setView([lat, lng], 18);
         marcador.openPopup();
+
+        // Si ya tengo mi ubicación, trazar ruta
+        if (miUbicacion) {
+          trazarRuta(miUbicacion, lugarActivo);
+        }
       });
     });
+
+    // ── MI UBICACIÓN ──
+    function mostrarBanner(msg, tipo) {
+      var b = document.getElementById('banner-ubicacion');
+      b.textContent = msg;
+      b.className = 'banner ' + tipo;
+    }
+
+    function calcularDistancia(lat1, lng1, lat2, lng2) {
+      var R = 6371000;
+      var dLat = (lat2 - lat1) * Math.PI / 180;
+      var dLng = (lng2 - lng1) * Math.PI / 180;
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return Math.round(R * c);
+    }
+
+    function limpiarRutas() {
+      rutas.forEach(function(r) { map.removeLayer(r); });
+      rutas = [];
+      document.getElementById('info-ruta').classList.add('hidden');
+    }
+
+    function trazarRuta(origen, destino) {
+      limpiarRutas();
+
+      var linea = L.polyline(
+        [[origen.lat, origen.lng], [destino.lat, destino.lng]],
+        { color: '#2563ff', weight: 4, opacity: 0.85, dashArray: '10, 8' }
+      ).addTo(map);
+
+      rutas.push(linea);
+      map.fitBounds(linea.getBounds(), { padding: [60, 60] });
+
+      var dist = calcularDistancia(origen.lat, origen.lng, destino.lat, destino.lng);
+      var distTexto = dist < 1000 ? dist + ' metros' : (dist / 1000).toFixed(1) + ' km';
+
+      document.getElementById('ruta-distancia').textContent =
+        'Distancia a ' + destino.nombre + ': ' + distTexto;
+      document.getElementById('info-ruta').classList.remove('hidden');
+    }
+
+    document.getElementById('btn-ubicacion').addEventListener('click', function() {
+      var btn = document.getElementById('btn-ubicacion');
+
+      if (!navigator.geolocation) {
+        mostrarBanner('❌ Tu navegador no soporta geolocalización', 'error');
+        return;
+      }
+
+      btn.textContent = '⏳ Buscando...';
+      btn.disabled = true;
+      mostrarBanner('📡 Obteniendo tu ubicación...', 'info');
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          var lat = pos.coords.latitude;
+          var lng = pos.coords.longitude;
+          var precision = Math.round(pos.coords.accuracy);
+
+          miUbicacion = { lat: lat, lng: lng };
+
+          // Eliminar marcador anterior
+          if (miMarcador) map.removeLayer(miMarcador);
+          if (miCirculo)  map.removeLayer(miCirculo);
+
+          // Icono "yo"
+          var iconoYo = L.divIcon({
+            html: '<div style="width:18px;height:18px;background:#2563ff;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 6px rgba(37,99,255,0.25);"></div>',
+            className: '',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          });
+
+          miMarcador = L.marker([lat, lng], { icon: iconoYo })
+            .addTo(map)
+            .bindPopup('<b>📍 Estás aquí</b><br>Precisión: ±' + precision + 'm')
+            .openPopup();
+
+          miCirculo = L.circle([lat, lng], {
+            radius: precision,
+            color: '#2563ff',
+            fillColor: '#2563ff',
+            fillOpacity: 0.08,
+            weight: 1
+          }).addTo(map);
+
+          map.setView([lat, lng], 18);
+
+          mostrarBanner('✅ Ubicación encontrada — precisión ±' + precision + ' metros. Selecciona un lugar para ver la ruta.', 'ok');
+          btn.textContent = '📍 Actualizar ubicación';
+          btn.disabled = false;
+
+          // Si hay un lugar activo, trazar ruta
+          if (lugarActivo) {
+            trazarRuta(miUbicacion, lugarActivo);
+          }
+        },
+        function(err) {
+          var msg = '❌ No se pudo obtener la ubicación';
+          if (err.code === 1) msg = '🔒 Permiso denegado — activa la ubicación en tu navegador';
+          if (err.code === 2) msg = '📡 Señal no disponible — intenta en exteriores';
+          if (err.code === 3) msg = '⏱️ Tiempo agotado — intenta de nuevo';
+          mostrarBanner(msg, 'error');
+          btn.textContent = '📍 ¿Dónde estoy?';
+          btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+
+    document.getElementById('btn-limpiar-ruta').addEventListener('click', function() {
+      limpiarRutas();
+    });
+
   });
 </script>

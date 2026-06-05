@@ -28,7 +28,10 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div class="field-group">
           <label>Contraseña</label>
-          <input id="login-password" type="password" placeholder="••••••••" />
+          <div class="password-wrap">
+            <input id="login-password" type="password" placeholder="••••••••" />
+            <button type="button" class="toggle-pass" data-target="login-password" aria-label="Mostrar contraseña">👁️</button>
+          </div>
         </div>
         <button class="btn-primary" id="btn-login">Iniciar sesión</button>
       </div>
@@ -45,7 +48,10 @@ import Layout from '../layouts/Layout.astro';
 
         <div class="field-group">
           <label>Contraseña</label>
-          <input id="reg-password" type="password" placeholder="Mínimo 6 caracteres" />
+          <div class="password-wrap">
+            <input id="reg-password" type="password" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="toggle-pass" data-target="reg-password" aria-label="Mostrar contraseña">👁️</button>
+          </div>
         </div>
         <button class="btn-primary" id="btn-register">Crear cuenta</button>
       </div>
@@ -186,6 +192,14 @@ import Layout from '../layouts/Layout.astro';
   }
   select option { background: #111827; color: #fff; }
   select:focus { border-color: rgba(37,99,255,0.6); }
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 2.9rem; }
+  .toggle-pass {
+    position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 1.05rem;
+    opacity: 0.55; padding: 0.35rem; line-height: 1; transition: opacity 0.2s;
+  }
+  .toggle-pass:hover { opacity: 1; }
   .hidden { display: none !important; }
 </style>
 
@@ -215,6 +229,17 @@ import Layout from '../layouts/Layout.astro';
   }
 
   window.switchTab = switchTab;
+
+  // Mostrar / ocultar contraseña
+  document.querySelectorAll('.toggle-pass').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      btn.textContent = visible ? '👁️' : '🙈';
+      btn.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    });
+  });
 
   // Login
   document.getElementById('btn-login').addEventListener('click', async () => {

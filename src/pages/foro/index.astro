@@ -31,7 +31,7 @@ import Layout from '../../layouts/Layout.astro';
         <option value="general">General</option>
         <option value="academico">Académico</option>
         <option value="eventos">Eventos</option>
-        <option value="deportes">Deportes</option>
+        <option value="cultura">Cultura</option>
       </select>
       <input id="edit-titulo" type="text" placeholder="Título" class="modal-input" />
       <textarea id="edit-contenido" placeholder="Contenido" class="modal-textarea"></textarea>
@@ -79,7 +79,7 @@ import Layout from '../../layouts/Layout.astro';
         <option value="general">General</option>
         <option value="academico">Académico</option>
         <option value="eventos">Eventos</option>
-        <option value="deportes">Deportes</option>
+        <option value="cultura">Cultura</option>
       </select>
       <input id="input-titulo" type="text" placeholder="Título de la publicación" class="form-input" />
       <textarea id="input-contenido" placeholder="¿Qué quieres compartir?" class="form-input form-textarea"></textarea>
@@ -98,7 +98,23 @@ import Layout from '../../layouts/Layout.astro';
       </div>
     </div>
 
+    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+    <div class="filtros-bar">
+      <div class="filtro-search">
+        <span class="filtro-search-icon">🔍</span>
+        <input id="filtro-buscar" type="text" placeholder="Buscar por título, contenido o autor..." />
+      </div>
+      <div class="filtro-cats">
+        <button class="filtro-cat activo" data-cat="todas">Todas</button>
+        <button class="filtro-cat" data-cat="general">General</button>
+        <button class="filtro-cat" data-cat="academico">Académico</button>
+        <button class="filtro-cat" data-cat="eventos">Eventos</button>
+        <button class="filtro-cat" data-cat="cultura">Cultura</button>
+      </div>
+    </div>
+
     <div id="posts-lista"></div>
+    <p id="no-resultados" class="loading hidden">😶 No hay publicaciones que coincidan con tu búsqueda.</p>
   </div>
 </Layout>
 
@@ -424,6 +440,27 @@ import Layout from '../../layouts/Layout.astro';
     color: #fff !important; font-size: 2rem !important; font-weight: 800 !important;
   }
 
+  /* ── BARRA DE FILTROS ── */
+  .filtros-bar { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+  .filtro-search { position: relative; }
+  .filtro-search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.95rem; opacity: 0.6; pointer-events: none; }
+  #filtro-buscar {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 0.85rem 1rem 0.85rem 2.6rem; color: #fff;
+    font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+  }
+  #filtro-buscar:focus { border-color: rgba(37,99,255,0.55); }
+  #filtro-buscar::placeholder { color: rgba(255,255,255,0.28); }
+  .filtro-cats { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .filtro-cat {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.55); padding: 0.5rem 1.1rem; border-radius: 999px;
+    font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  }
+  .filtro-cat:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .filtro-cat.activo { background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(37,99,255,0.3); }
+
   @keyframes fadeIn  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
   @keyframes slideUp { from { opacity:0; transform:translate(-50%,12px); } to { opacity:1; transform:translate(-50%,0); } }
 </style>
@@ -438,6 +475,8 @@ import Layout from '../../layouts/Layout.astro';
   var editandoPostId = null;
   var eliminandoPostId = null;
   var archivosSeleccionados = [];
+  var filtroCategoria = 'todas';
+  var filtroBusqueda = '';
 
   function toast(msg, tipo) {
     var el = document.getElementById('toast');
@@ -465,6 +504,21 @@ import Layout from '../../layouts/Layout.astro';
       initPage();
     }
   });
+
+  function aplicarFiltros() {
+    var q = filtroBusqueda.trim().toLowerCase();
+    var cards = document.querySelectorAll('#posts-lista .post-card');
+    var visibles = 0;
+    cards.forEach(function(card) {
+      var okCat = filtroCategoria === 'todas' || card.dataset.categoria === filtroCategoria;
+      var okBusqueda = !q || (card.dataset.buscar || '').indexOf(q) !== -1;
+      var mostrar = okCat && okBusqueda;
+      card.style.display = mostrar ? '' : 'none';
+      if (mostrar) visibles++;
+    });
+    var noRes = document.getElementById('no-resultados');
+    if (noRes) noRes.classList.toggle('hidden', visibles !== 0 || cards.length === 0);
+  }
 
   function initPage() {
     var btnNuevo = document.getElementById('btn-nuevo');
@@ -510,6 +564,20 @@ import Layout from '../../layouts/Layout.astro';
         if (result.error) { toast('Error al eliminar', 'error'); return; }
         toast('Publicaci\xF3n eliminada', 'ok');
         cargarPosts();
+      });
+    });
+
+    var inputBuscar = document.getElementById('filtro-buscar');
+    if (inputBuscar) inputBuscar.addEventListener('input', function() {
+      filtroBusqueda = this.value;
+      aplicarFiltros();
+    });
+    document.querySelectorAll('.filtro-cat').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filtro-cat').forEach(function(b) { b.classList.remove('activo'); });
+        this.classList.add('activo');
+        filtroCategoria = this.dataset.cat;
+        aplicarFiltros();
       });
     });
 
@@ -786,6 +854,8 @@ import Layout from '../../layouts/Layout.astro';
           var card = document.createElement('div');
           card.className = 'post-card';
           card.dataset.postId = p.id;
+          card.dataset.categoria = (p.categoria || '').toLowerCase();
+          card.dataset.buscar = ((p.titulo || '') + ' ' + (p.contenido || '') + ' ' + (p.autor || '')).toLowerCase();
           card.innerHTML =
             crudBtns +
             renderMedia(p.imagen_url) +
@@ -815,6 +885,7 @@ import Layout from '../../layouts/Layout.astro';
 
           lista.appendChild(card);
           iniciarAcciones(card, p, currentUser);
+          aplicarFiltros();
           cargarPost(i + 1);
         });
       }

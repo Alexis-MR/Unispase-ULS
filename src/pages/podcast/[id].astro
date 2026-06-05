@@ -1,0 +1,375 @@
+---
+import Layout from '../../layouts/Layout.astro';
+const { id } = Astro.params;
+---
+
+<Layout title="Episodio — UniSpace ULS">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <!-- MODAL CONFIRMAR ELIMINAR -->
+  <div id="modal-confirmar" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-confirm">
+      <div class="confirm-icon">🗑️</div>
+      <h3>¿Eliminar episodio?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="modal-btns">
+        <button id="confirm-cancelar" class="btn-cancel">Cancelar</button>
+        <button id="confirm-ok" class="btn-danger">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR -->
+  <div id="modal-editar" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✏️ Editar episodio</h3>
+        <button id="modal-cerrar" class="modal-close">✕</button>
+      </div>
+      <input id="edit-titulo" type="text" placeholder="Título" class="modal-input" />
+      <input id="edit-url" type="text" placeholder="URL de YouTube o audio" class="modal-input" />
+      <select id="edit-categoria" class="modal-input">
+        <option value="general">General</option>
+        <option value="academico">Académico</option>
+        <option value="entretenimiento">Entretenimiento</option>
+        <option value="noticias">Noticias</option>
+      </select>
+      <textarea id="edit-descripcion" placeholder="Descripción" class="modal-textarea"></textarea>
+      <div class="modal-btns">
+        <button id="modal-cancelar" class="btn-cancel">Cancelar</button>
+        <button id="modal-guardar" class="btn-submit">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="wrap" data-id={id}>
+    <a href="/podcast" class="volver">← Volver a episodios</a>
+    <div id="detalle" class="loading">Cargando episodio…</div>
+  </div>
+</Layout>
+
+<style is:global>
+  /* ===== PÁGINA DE DETALLE DE PODCAST (estilos globales: aplican al HTML inyectado) ===== */
+  .wrap { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; font-family: 'DM Sans', sans-serif; }
+  .volver { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.8rem; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s, transform 0.2s; }
+  .volver:hover { color: #60a5fa; transform: translateX(-3px); }
+  .loading { text-align: center; color: rgba(255,255,255,0.3); padding: 4rem; font-size: 0.95rem; }
+
+  /* MEDIA */
+  .ep-media { width: 100%; background: #0d1117; border-radius: 20px; overflow: hidden; margin-bottom: 1.8rem; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+  .ep-media iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+  .ep-media audio { width: 100%; padding: 1.6rem 1.2rem; accent-color: #2563ff; }
+  .ep-media .no-media { display: flex; align-items: center; justify-content: center; height: 240px; font-size: 4rem; opacity: 0.2; background: radial-gradient(circle at 50% 40%, rgba(37,99,255,0.18), transparent 70%); }
+
+  /* META + TÍTULO + DESCRIPCIÓN */
+  .ep-meta-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .ep-cat { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; background: rgba(37,99,255,0.16); color: #7eb0ff; padding: 0.3rem 0.85rem; border-radius: 999px; border: 1px solid rgba(37,99,255,0.32); }
+  .ep-date { font-size: 0.78rem; color: rgba(255,255,255,0.4); display: inline-flex; align-items: center; gap: 0.6rem; }
+  .ep-date::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+  .ep-titulo { font-family: 'Syne', sans-serif; font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: #fff; margin-bottom: 1.1rem; }
+  .ep-desc { color: rgba(255,255,255,0.62); font-size: 1rem; line-height: 1.85; margin-bottom: 1.8rem; padding: 0.2rem 0 0.2rem 1.1rem; border-left: 3px solid rgba(37,99,255,0.45); white-space: pre-wrap; }
+
+  /* FOOTER: autor + acciones */
+  .ep-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 0; border-top: 1px solid rgba(255,255,255,0.07); border-bottom: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; }
+  .ep-footer .author-block { display: flex; align-items: center; gap: 0.8rem; }
+  .ep-footer .author-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#2563ff,#7c3aed); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 4px 14px rgba(37,99,255,0.35); }
+  .ep-footer .author-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); font-weight: 600; }
+  .ep-footer .author-name { font-size: 0.92rem; font-weight: 700; color: #e6ecf5; font-family: 'Syne', sans-serif; }
+
+  .ep-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .ep-crud { display: flex; gap: 0.45rem; }
+
+  .btn-accion { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.05rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.22s; border: 1.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); font-family: 'DM Sans', sans-serif; }
+  .btn-accion:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateY(-1px); }
+  .btn-accion.liked { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.45); color: #f87171; box-shadow: 0 2px 14px rgba(239,68,68,0.2); }
+
+  .btn-crud { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 0.95rem; border-radius: 999px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; font-family: 'DM Sans', sans-serif; }
+  .btn-crud.btn-editar { background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.32); color: #facc15; }
+  .btn-crud.btn-editar:hover { background: rgba(234,179,8,0.28); transform: translateY(-1px); }
+  .btn-crud.btn-eliminar { background: rgba(239,68,68,0.13); border-color: rgba(239,68,68,0.3); color: #f87171; }
+  .btn-crud.btn-eliminar:hover { background: rgba(239,68,68,0.26); transform: translateY(-1px); }
+
+  /* COMENTARIOS */
+  .com-wrap { margin-top: 2.4rem; }
+  .com-title { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 1.3rem; display: flex; align-items: center; gap: 0.55rem; }
+  .com-title::before { content: '💬'; font-size: 1rem; }
+  .comentario-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 0.95rem 1.1rem; margin-bottom: 0.75rem; transition: border-color 0.2s; }
+  .comentario-item:hover { border-color: rgba(255,255,255,0.15); }
+  .comentario-autor { font-size: 0.82rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.35rem; }
+  .comentario-texto { font-size: 0.9rem; color: rgba(255,255,255,0.65); line-height: 1.7; }
+  .comentarios-empty { font-size: 0.88rem; color: rgba(255,255,255,0.28); text-align: center; padding: 1.4rem 0; }
+
+  .form-comentar { display: flex; gap: 0.6rem; align-items: flex-end; margin-top: 1.1rem; }
+  .form-comentar textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0.8rem 1rem; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; resize: none; outline: none; min-height: 48px; max-height: 130px; transition: border-color 0.2s; }
+  .form-comentar textarea:focus { border-color: rgba(37,99,255,0.5); background: rgba(37,99,255,0.04); }
+  .form-comentar button { background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border: none; border-radius: 14px; padding: 0.8rem 1.4rem; font-weight: 700; font-size: 0.86rem; cursor: pointer; white-space: nowrap; font-family: 'Syne', sans-serif; transition: transform 0.2s, box-shadow 0.2s; }
+  .form-comentar button:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(37,99,255,0.4); }
+  .form-comentar button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .aviso-login { display: flex; align-items: center; gap: 0.5rem; background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.2); border-radius: 14px; padding: 0.9rem 1.1rem; font-size: 0.88rem; color: rgba(255,255,255,0.5); margin-top: 1.1rem; }
+  .aviso-login a { color: #60a5fa; font-weight: 700; text-decoration: underline; }
+
+  /* TOAST + MODALES */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.97); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1.8rem; border-radius: 14px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 9999; white-space: nowrap; }
+  .toast.warn { border-color: rgba(251,191,36,0.5); color: #fbbf24; }
+  .toast.error { border-color: rgba(239,68,68,0.5); color: #f87171; }
+  .toast.ok { border-color: rgba(34,197,94,0.5); color: #4ade80; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(6px); }
+  .modal-box { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 2rem; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 24px 64px rgba(0,0,0,0.6); margin: 1rem; }
+  .modal-confirm { max-width: 380px; text-align: center; align-items: center; }
+  .confirm-icon { font-size: 2.5rem; }
+  .modal-confirm h3 { font-size: 1.15rem; font-weight: 800; color: #fff; }
+  .modal-confirm p { font-size: 0.88rem; color: rgba(255,255,255,0.4); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+  .modal-close { background: rgba(255,255,255,0.07); border: none; color: rgba(255,255,255,0.45); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.82rem; }
+  .modal-close:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+  .modal-input, .modal-textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.8rem 1rem; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; width: 100%; box-sizing: border-box; }
+  .modal-input:focus, .modal-textarea:focus { border-color: rgba(37,99,255,0.6); }
+  .modal-textarea { min-height: 110px; resize: vertical; }
+  .modal-input option { background: #111827; }
+  .modal-btns { display: flex; gap: 0.8rem; justify-content: flex-end; }
+  .btn-cancel { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.1); padding: 0.7rem 1.4rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.88rem; font-family: 'DM Sans', sans-serif; }
+  .btn-cancel:hover { background: rgba(255,255,255,0.09); color: #fff; }
+  .btn-submit { background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border: none; padding: 0.7rem 1.6rem; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.88rem; font-family: 'DM Sans', sans-serif; }
+  .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-danger { background: linear-gradient(135deg,#dc2626,#b91c1c); color: #fff; border: none; padding: 0.7rem 1.6rem; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.88rem; font-family: 'DM Sans', sans-serif; }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  var SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+  var SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  var supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var PODCAST_ID = document.getElementById('app').dataset.id;
+  var currentUser = null;
+  var userRol = 'estudiante';
+  var podcast = null;
+
+  function toast(msg, tipo) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (tipo || '');
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(function() { el.style.display = 'none'; }, 3200);
+  }
+
+  function nombreSesion() {
+    if (!currentUser) return '';
+    return (currentUser.user_metadata && currentUser.user_metadata.full_name)
+      ? currentUser.user_metadata.full_name
+      : currentUser.email.split('@')[0];
+  }
+
+  function getYouTubeId(url) {
+    if (!url) return null;
+    var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function renderMedia(url) {
+    if (!url) return '<div class="no-media">🎙️</div>';
+    var ytId = getYouTubeId(url);
+    if (ytId) return '<iframe src="https://www.youtube.com/embed/' + ytId + '" allowfullscreen loading="lazy"></iframe>';
+    return '<audio controls><source src="' + url + '" /></audio>';
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  async function init() {
+    var result = await supabase.auth.getSession();
+    var session = result.data.session;
+    if (session) {
+      currentUser = session.user;
+      try {
+        var res = await supabase.from('perfiles').select('rol').eq('id', currentUser.id).single();
+        if (res.data) userRol = res.data.rol;
+      } catch (e) {}
+    }
+    await cargarPodcast();
+  }
+
+  async function cargarPodcast() {
+    var detalle = document.getElementById('detalle');
+    var res = await supabase.from('podcasts').select('*').eq('id', PODCAST_ID).single();
+    if (res.error || !res.data) {
+      detalle.innerHTML = '<div class="loading">😕 No se encontró este episodio.</div>';
+      return;
+    }
+    podcast = res.data;
+    render();
+    cargarLikes();
+    cargarComentarios();
+  }
+
+  function render() {
+    var p = podcast;
+    var nombre = nombreSesion();
+    var esAutor = currentUser && (
+      userRol === 'admin' ||
+      (userRol === 'docente' && (p.user_id === currentUser.id || p.autor === nombre))
+    );
+
+    var fecha = new Date(p.created_at).toLocaleDateString('es-SV', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    var crud = esAutor
+      ? '<div class="ep-crud">' +
+          '<button class="btn-crud btn-editar" id="btn-editar">✏️ Editar</button>' +
+          '<button class="btn-crud btn-eliminar" id="btn-eliminar">🗑️ Eliminar</button>' +
+        '</div>'
+      : '';
+
+    var formCom = currentUser
+      ? '<div class="form-comentar"><textarea id="com-input" placeholder="Escribe un comentario..." rows="1"></textarea><button id="btn-comentar">Comentar</button></div>'
+      : '<div class="aviso-login">🔒 <span><a href="/login">Inicia sesión</a> para comentar y dar like.</span></div>';
+
+    document.getElementById('detalle').innerHTML =
+      '<div class="ep-media">' + renderMedia(p.url_audio) + '</div>' +
+      '<div class="ep-meta-row"><span class="ep-cat">' + escapeHtml(p.categoria) + '</span><span class="ep-date">' + fecha + '</span></div>' +
+      '<h1 class="ep-titulo">' + escapeHtml(p.titulo) + '</h1>' +
+      (p.descripcion ? '<div class="ep-desc">' + escapeHtml(p.descripcion) + '</div>' : '') +
+      '<div class="ep-footer">' +
+        '<div class="author-block">' +
+          '<div class="author-avatar">' + (p.autor ? p.autor.charAt(0).toUpperCase() : 'U') + '</div>' +
+          '<div><div class="author-label">Publicado por</div><div class="author-name">' + escapeHtml(p.autor) + '</div></div>' +
+        '</div>' +
+        '<div class="ep-actions">' +
+          '<button class="btn-accion" id="btn-like"><span class="like-icon">🤍</span><span class="like-count">0</span></button>' +
+          crud +
+        '</div>' +
+      '</div>' +
+      '<div class="com-wrap">' +
+        '<div class="com-title">Comentarios</div>' +
+        '<div id="com-lista"><p class="comentarios-empty">Cargando comentarios…</p></div>' +
+        formCom +
+      '</div>';
+
+    // Wire acciones
+    var btnEditar = document.getElementById('btn-editar');
+    if (btnEditar) btnEditar.addEventListener('click', abrirModalEditar);
+    var btnEliminar = document.getElementById('btn-eliminar');
+    if (btnEliminar) btnEliminar.addEventListener('click', function() {
+      document.getElementById('modal-confirmar').style.display = 'flex';
+    });
+    document.getElementById('btn-like').addEventListener('click', toggleLike);
+    var btnCom = document.getElementById('btn-comentar');
+    if (btnCom) btnCom.addEventListener('click', enviarComentario);
+  }
+
+  // ── LIKES ──
+  async function cargarLikes() {
+    var res = await supabase.from('podcast_likes').select('user_id').eq('podcast_id', PODCAST_ID);
+    var likes = res.data || [];
+    var btn = document.getElementById('btn-like');
+    if (!btn) return;
+    var yaLiked = currentUser ? likes.some(function(l) { return l.user_id === currentUser.id; }) : false;
+    btn.dataset.liked = yaLiked ? 'true' : 'false';
+    btn.classList.toggle('liked', yaLiked);
+    btn.querySelector('.like-icon').textContent = yaLiked ? '❤️' : '🤍';
+    btn.querySelector('.like-count').textContent = String(likes.length);
+  }
+
+  async function toggleLike() {
+    if (!currentUser) { toast('🔒 Inicia sesión para dar like', 'warn'); return; }
+    var btn = document.getElementById('btn-like');
+    if (btn.dataset.loading === 'true') return;
+    btn.dataset.loading = 'true';
+    var yaLiked = btn.dataset.liked === 'true';
+    var countEl = btn.querySelector('.like-count');
+    var iconEl = btn.querySelector('.like-icon');
+
+    if (yaLiked) {
+      await supabase.from('podcast_likes').delete().eq('podcast_id', PODCAST_ID).eq('user_id', currentUser.id);
+      btn.dataset.liked = 'false'; btn.classList.remove('liked');
+      iconEl.textContent = '🤍';
+      countEl.textContent = String(Math.max(0, Number(countEl.textContent) - 1));
+    } else {
+      await supabase.from('podcast_likes').insert({ podcast_id: PODCAST_ID, user_id: currentUser.id });
+      btn.dataset.liked = 'true'; btn.classList.add('liked');
+      iconEl.textContent = '❤️';
+      countEl.textContent = String(Number(countEl.textContent) + 1);
+    }
+    btn.dataset.loading = 'false';
+  }
+
+  // ── COMENTARIOS ──
+  async function cargarComentarios() {
+    var res = await supabase.from('podcast_comentarios')
+      .select('autor_nombre, texto, created_at')
+      .eq('podcast_id', PODCAST_ID)
+      .order('created_at', { ascending: true });
+    var lista = res.data || [];
+    var cont = document.getElementById('com-lista');
+    if (!cont) return;
+    if (!lista.length) { cont.innerHTML = '<p class="comentarios-empty">Sin comentarios aún. ¡Sé el primero!</p>'; return; }
+    cont.innerHTML = lista.map(function(c) {
+      return '<div class="comentario-item"><div class="comentario-autor">' + escapeHtml(c.autor_nombre || 'Usuario') + '</div><div class="comentario-texto">' + escapeHtml(c.texto) + '</div></div>';
+    }).join('');
+  }
+
+  async function enviarComentario() {
+    var input = document.getElementById('com-input');
+    var texto = input.value.trim();
+    if (!texto) return;
+    var btn = document.getElementById('btn-comentar');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    var nombre = nombreSesion();
+    var res = await supabase.from('podcast_comentarios').insert({
+      podcast_id: PODCAST_ID, user_id: currentUser.id, autor_nombre: nombre, texto: texto
+    }).select();
+    btn.disabled = false; btn.textContent = 'Comentar';
+    if (res.error) { toast('Error al comentar', 'error'); return; }
+    input.value = '';
+    cargarComentarios();
+    toast('Comentario publicado', 'ok');
+  }
+
+  // ── EDITAR ──
+  function abrirModalEditar() {
+    document.getElementById('edit-titulo').value = podcast.titulo || '';
+    document.getElementById('edit-url').value = podcast.url_audio || '';
+    document.getElementById('edit-categoria').value = podcast.categoria || 'general';
+    document.getElementById('edit-descripcion').value = podcast.descripcion || '';
+    document.getElementById('modal-editar').style.display = 'flex';
+  }
+  function cerrarModalEditar() { document.getElementById('modal-editar').style.display = 'none'; }
+
+  document.getElementById('modal-cerrar').addEventListener('click', cerrarModalEditar);
+  document.getElementById('modal-cancelar').addEventListener('click', cerrarModalEditar);
+  document.getElementById('modal-guardar').addEventListener('click', async function() {
+    var titulo = document.getElementById('edit-titulo').value.trim();
+    var url_audio = document.getElementById('edit-url').value.trim();
+    var categoria = document.getElementById('edit-categoria').value;
+    var descripcion = document.getElementById('edit-descripcion').value.trim();
+    if (!titulo) { toast('El título no puede estar vacío', 'warn'); return; }
+    var btn = document.getElementById('modal-guardar');
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+    var res = await supabase.from('podcasts').update({ titulo: titulo, url_audio: url_audio, categoria: categoria, descripcion: descripcion }).eq('id', PODCAST_ID);
+    btn.textContent = '💾 Guardar'; btn.disabled = false;
+    if (res.error) { toast('Error al guardar', 'error'); return; }
+    cerrarModalEditar();
+    toast('Episodio actualizado', 'ok');
+    cargarPodcast();
+  });
+
+  // ── ELIMINAR ──
+  document.getElementById('confirm-cancelar').addEventListener('click', function() {
+    document.getElementById('modal-confirmar').style.display = 'none';
+  });
+  document.getElementById('confirm-ok').addEventListener('click', async function() {
+    document.getElementById('modal-confirmar').style.display = 'none';
+    var res = await supabase.from('podcasts').delete().eq('id', PODCAST_ID);
+    if (res.error) { toast('Error al eliminar', 'error'); return; }
+    toast('Episodio eliminado', 'ok');
+    setTimeout(function() { window.location.href = '/podcast'; }, 900);
+  });
+
+  init();
+</script>

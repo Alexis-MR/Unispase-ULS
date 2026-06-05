@@ -1,0 +1,228 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Admin — UniSpace ULS">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <div class="auth-brand">
+        <span class="brand-icon">🛠️</span>
+        <h1>Panel <em>Admin</em></h1>
+        <p>Restablecer la contraseña de un usuario</p>
+      </div>
+
+      <div id="msg" class="msg hidden"></div>
+
+      <!-- Mientras se verifica la sesión -->
+      <div id="cargando" class="estado">Verificando permisos…</div>
+
+      <!-- Si no es admin -->
+      <div id="denegado" class="estado hidden">
+        🔒 No tenés permisos para entrar aquí.
+        <a href="/login">Iniciar sesión</a>
+      </div>
+
+      <!-- Formulario (solo admins) -->
+      <div id="form-admin" class="hidden">
+        <div class="field-group">
+          <label>Correo del usuario</label>
+          <input id="target-email" type="email" placeholder="usuario@correo.com" />
+        </div>
+        <div class="field-group">
+          <label>Nueva contraseña (opcional)</label>
+          <div class="password-wrap">
+            <input id="target-password" type="password" placeholder="Dejar vacío para no cambiarla" />
+            <button type="button" class="toggle-pass" data-target="target-password" aria-label="Mostrar contraseña">👁️</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Nuevo correo (opcional)</label>
+          <input id="target-newemail" type="email" placeholder="Dejar vacío para no cambiarlo" />
+        </div>
+        <div class="field-group">
+          <label>Nuevo rol (opcional)</label>
+          <select id="target-rol">
+            <option value="">— No cambiar —</option>
+            <option value="estudiante">Estudiante</option>
+            <option value="docente">Docente</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="btn-reset">Aplicar cambios</button>
+      </div>
+
+      <a href="/" class="volver-link">← Volver al inicio</a>
+
+    </div>
+  </div>
+</Layout>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .auth-page {
+    font-family: 'DM Sans', sans-serif; min-height: 100vh; background: #080c14;
+    display: flex; align-items: center; justify-content: center; padding: 2rem;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(37,99,255,0.12) 0%, transparent 60%);
+  }
+  .auth-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px; padding: 2.5rem; width: 100%; max-width: 420px;
+  }
+  .auth-brand { text-align: center; margin-bottom: 2rem; }
+  .brand-icon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+  h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+  h1 em { font-style: italic; font-weight: 400; color: #60a5fa; }
+  .auth-brand p { color: rgba(255,255,255,0.4); font-size: 0.88rem; }
+
+  .estado {
+    text-align: center; color: rgba(255,255,255,0.45); font-size: 0.9rem;
+    padding: 1.5rem 0; display: flex; flex-direction: column; gap: 0.6rem; align-items: center;
+  }
+  .estado a { color: #60a5fa; font-weight: 700; text-decoration: underline; font-size: 0.85rem; }
+
+  .msg { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 1.2rem; text-align: center; }
+  .msg.error { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+  .msg.success { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+
+  .field-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+  label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+  input {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 0.8rem 1rem; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; width: 100%; transition: border-color 0.2s;
+  }
+  input:focus { border-color: rgba(37,99,255,0.6); background: rgba(37,99,255,0.04); }
+
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 2.9rem; }
+  .toggle-pass {
+    position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 1.05rem;
+    opacity: 0.55; padding: 0.35rem; line-height: 1; transition: opacity 0.2s;
+  }
+  .toggle-pass:hover { opacity: 1; }
+
+  select {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 0.8rem 1rem; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; width: 100%; transition: border-color 0.2s; cursor: pointer;
+  }
+  select:focus { border-color: rgba(37,99,255,0.6); }
+  select option { background: #111827; color: #fff; }
+  .btn-primary {
+    width: 100%; background: #2563ff; color: #fff; border: none; padding: 0.85rem; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s; margin-top: 0.5rem; box-shadow: 0 0 30px rgba(37,99,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 30px rgba(37,99,255,0.5); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .volver-link { display: block; text-align: center; margin-top: 1.4rem; color: rgba(255,255,255,0.4); font-size: 0.82rem; text-decoration: none; transition: color 0.2s; }
+  .volver-link:hover { color: #60a5fa; }
+
+  .hidden { display: none !important; }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  function showMsg(text, type = 'error') {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = `msg ${type}`;
+  }
+  function hideMsg() { document.getElementById('msg').className = 'msg hidden'; }
+
+  // Mostrar / ocultar contraseña
+  document.querySelectorAll('.toggle-pass').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      btn.textContent = visible ? '👁️' : '🙈';
+      btn.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    });
+  });
+
+  // Verificar que el usuario actual sea admin (esto es solo para la UI;
+  // el servidor vuelve a validarlo de todos modos)
+  let accessToken = null;
+
+  (async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const cargando = document.getElementById('cargando');
+    const denegado = document.getElementById('denegado');
+    const form = document.getElementById('form-admin');
+
+    if (!session) {
+      cargando.classList.add('hidden');
+      denegado.classList.remove('hidden');
+      return;
+    }
+
+    accessToken = session.access_token;
+
+    const { data: perfil } = await supabase
+      .from('perfiles').select('rol').eq('id', session.user.id).single();
+
+    cargando.classList.add('hidden');
+    if (perfil && perfil.rol === 'admin') {
+      form.classList.remove('hidden');
+    } else {
+      denegado.classList.remove('hidden');
+    }
+  })();
+
+  // Enviar el cambio de contraseña al endpoint del servidor
+  document.getElementById('btn-reset').addEventListener('click', async () => {
+    hideMsg();
+    const email = document.getElementById('target-email').value.trim();
+    const password = document.getElementById('target-password').value;
+    const newEmail = document.getElementById('target-newemail').value.trim();
+    const newRol = document.getElementById('target-rol').value;
+
+    if (!email) { showMsg('Escribe el correo del usuario'); return; }
+    if (!password && !newEmail && !newRol) { showMsg('Indica una nueva contraseña, un nuevo correo o un nuevo rol'); return; }
+    if (password && password.length < 6) { showMsg('La contraseña debe tener al menos 6 caracteres'); return; }
+
+    const btn = document.getElementById('btn-reset');
+    btn.textContent = 'Aplicando...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ email, password, newEmail, newRol })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        showMsg('✅ ' + data.message, 'success');
+        document.getElementById('target-email').value = '';
+        document.getElementById('target-password').value = '';
+        document.getElementById('target-newemail').value = '';
+        document.getElementById('target-rol').value = '';
+      } else {
+        showMsg(data.error || 'No se pudo aplicar el cambio');
+      }
+    } catch (e) {
+      showMsg('Error de conexión con el servidor');
+    } finally {
+      btn.textContent = 'Aplicar cambios';
+      btn.disabled = false;
+    }
+  });
+</script>
