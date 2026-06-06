@@ -120,6 +120,7 @@ import Layout from '../../layouts/Layout.astro';
 
 <style>
   /* ── TOAST ── */
+
   .toast {
     position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
     background: rgba(15,23,42,0.97); border: 1px solid rgba(255,255,255,0.12);
@@ -127,6 +128,7 @@ import Layout from '../../layouts/Layout.astro';
     font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     z-index: 9999; white-space: nowrap; animation: slideUp 0.3s ease;
   }
+
   .toast.warn  { border-color: rgba(251,191,36,0.5); color: #fbbf24; }
   .toast.error { border-color: rgba(239,68,68,0.5);  color: #f87171; }
   .toast.ok    { border-color: rgba(34,197,94,0.5);  color: #4ade80; }
@@ -144,6 +146,9 @@ import Layout from '../../layouts/Layout.astro';
     max-height: 90vh; overflow-y: auto;
     display: flex; flex-direction: column; gap: 1rem;
     box-shadow: 0 24px 64px rgba(0,0,0,0.6); margin: 1rem;
+  }
+  .post-body{
+    background: #370372;
   }
   /* modal confirmar */
   .modal-confirm { max-width: 380px; text-align: center; align-items: center; }
@@ -260,7 +265,7 @@ import Layout from '../../layouts/Layout.astro';
 
   /* ── POST CARD ── */
   .post-card {
-    position: relative; background: rgba(255,255,255,0.03);
+    position: relative; background: rgba(30, 3, 104, 0.03));
     border: 1px solid rgba(255,255,255,0.07); border-radius: 22px;
     margin-bottom: 1.8rem; overflow: hidden; transition: all 0.3s;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
@@ -349,7 +354,7 @@ import Layout from '../../layouts/Layout.astro';
 
   /* ── SECCIÓN COMENTARIOS ── */
   .comentarios-section {
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(2, 13, 73, 0.05);
     padding: 1.2rem 1.8rem 1.4rem 2.2rem;
     display: flex; flex-direction: column; gap: 0.9rem;
     animation: fadeIn 0.2s ease;
@@ -441,24 +446,27 @@ import Layout from '../../layouts/Layout.astro';
   }
 
   /* ── BARRA DE FILTROS ── */
-  .filtros-bar { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
-  .filtro-search { position: relative; }
+  .filtros-bar { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;}
+  .filtro-search { position: relative;}
   .filtro-search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.95rem; opacity: 0.6; pointer-events: none; }
   #filtro-buscar {
+   
     width: 100%; box-sizing: border-box;
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px; padding: 0.85rem 1rem 0.85rem 2.6rem; color: #fff;
+    border-radius: 14px; padding: 0.85rem 1rem 0.85rem 2.6rem; color: #201f1f;
+    border-color: green;
     font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
   }
   #filtro-buscar:focus { border-color: rgba(37,99,255,0.55); }
   #filtro-buscar::placeholder { color: rgba(255,255,255,0.28); }
   .filtro-cats { display: flex; flex-wrap: wrap; gap: 0.55rem; }
   .filtro-cat {
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.55); padding: 0.5rem 1.1rem; border-radius: 999px;
+    background: rgba(3, 233, 22, 0.562); border: 1px solid rgba(255,255,255,0.1);
+
+    color: rgba(20, 19, 19, 0.897); padding: 0.5rem 1.1rem; border-radius: 999px;
     font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
   }
-  .filtro-cat:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .filtro-cat:hover { background: rgba(15, 150, 3, 0.938); color: #0829e496; }
   .filtro-cat.activo { background: linear-gradient(135deg,#2563ff,#7c3aed); color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(37,99,255,0.3); }
 
   @keyframes fadeIn  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }

@@ -14,7 +14,13 @@ import Layout from '../layouts/Layout.astro';
           <a href="/foro" class="btn-primary">Ir al Foro</a>
         </div>
       </div>
+      
       <div class="hero-img-wrap">
+                <img
+          src="https://uls.edu.sv/sitioweb/wp-content/uploads/2024/07/Rectangle-1-1.png"
+          alt="Estudiante ULS"
+          style=" object-fit: cover "
+        />
         <img
           src="https://static.vecteezy.com/system/resources/thumbnails/055/835/082/small/smiling-student-girl-holding-book-and-backpack-isolated-on-transparent-background-png.png"
           alt="Estudiante ULS"
@@ -120,10 +126,10 @@ import Layout from '../layouts/Layout.astro';
   /* ── IMAGEN ── */
   .hero-img-wrap {
     flex-shrink: 0;
-    width: 650px;
+    width: 900px;
     display: flex;
     align-items: flex-end;
-    justify-content: center;
+  height: 500px;
     position: relative;
   }
   .hero-img-wrap::after {
@@ -157,16 +163,17 @@ import Layout from '../layouts/Layout.astro';
   }
 
   .card {
-    background: rgba(255,255,255,0.04);
+    background: rgb(15, 4, 112) ;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 20px; padding: 2rem;
-    text-decoration: none; color: #fff;
+    text-decoration: none; color: #fcf5f5f8;
+    font-weight: 800; 
     transition: transform 0.2s, border-color 0.2s;
   }
   .card:hover { transform: translateY(-4px); border-color: rgba(37,99,255,0.4); }
 
   .icon { font-size: 2.5rem; margin-bottom: 1rem; }
-  .card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .card h3 { font-size: 2rem; margin-bottom: 0.5rem; }
   .card p { color: rgba(255,255,255,0.45); font-size: 0.9rem; line-height: 1.6; }
 
   /* ── RESPONSIVE ── */
